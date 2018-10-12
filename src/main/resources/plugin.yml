@@ -1,0 +1,9 @@
+name: HotsSG
+main: net.hotsmc.sg.HSG
+version: 1.0
+commands:
+  hsg:
+  sidebar:
+  spec:
+  vote:
+    aliases: [v]
