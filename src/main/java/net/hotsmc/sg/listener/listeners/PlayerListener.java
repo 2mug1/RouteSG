@@ -1,15 +1,14 @@
 package net.hotsmc.sg.listener.listeners;
 
+import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.utility.ChatUtility;
-import net.hotsmc.sg.utility.GroundUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import net.hotsmc.sg.utility.PlayerUtility;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,8 +51,9 @@ public class PlayerListener implements Listener {
             player.teleport(gameConfig.getLobbyLocation());
             player.setAllowFlight(false);
             player.setFlying(false);
-            //int online = gameTask.getGamePlayers().size();
-            //ChatUtility.broadcast(ChatColor.YELLOW + "Joined players: " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + online + ChatColor.GRAY + "/" + ChatColor.GOLD + "24" + ChatColor.DARK_GRAY + "]");
+            if (gameTask.isTimerFlag()) {
+                gameTask.getVoteManager().send(player);
+            }
         }
         if (state == GameState.LiveGame || state == GameState.PreDeathMatch || state == GameState.DeathMatch) {
             player.teleport(gameTask.getCurrentMap().getDefaultSpawn());
@@ -97,7 +97,7 @@ public class PlayerListener implements Listener {
             }
             PlayerUtility.clearEffects(player);
             world.strikeLightningEffect(location);
-            ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + ChatColor.DARK_GREEN + player.getName());
+            ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
         }
         HSG.getGameTask().removeGamePlayer(gamePlayer);
     }
@@ -118,7 +118,6 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
@@ -173,8 +172,77 @@ public class PlayerListener implements Listener {
             GamePlayer damagedGP = gameTask.getGamePlayer(damaged);
             if (damagedGP.isWatching() || damagerGP.isWatching()) {
                 event.setCancelled(true);
+                return;
+            }
+
+            //ダイヤモンドパンチ対策 これで解決するはず
+            ItemStack itemStack = damager.getItemInHand();
+            if (itemStack == null) return;
+            Material type = itemStack.getType();
+            if (type != Material.WOOD_SWORD && type != Material.STONE_SWORD && type != Material.GOLD_SWORD &&
+                    type != Material.IRON_SWORD && type != Material.DIAMOND_SWORD && type != Material.WOOD_SPADE &&
+                    type != Material.STONE_SPADE && type != Material.GOLD_SPADE && type != Material.IRON_SPADE &&
+                    type != Material.DIAMOND_SPADE && type != Material.WOOD_AXE && type != Material.GOLD_AXE &&
+                    type != Material.STONE_AXE && type != Material.IRON_AXE && type != Material.DIAMOND_AXE &&
+                    type != Material.WOOD_PICKAXE && type != Material.GOLD_PICKAXE && type != Material.STONE_PICKAXE &&
+                    type != Material.IRON_PICKAXE && type != Material.DIAMOND_PICKAXE) {
+                ItemStack cp = damaged.getEquipment().getChestplate();
+                if (cp == null) return;
+                Material cpType = cp.getType();
+                if (cpType == Material.AIR) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.7D);
+                        return;
+                    }
+                    event.setDamage(0.5D);
+                }
+                if (cpType == Material.LEATHER_CHESTPLATE) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.35D);
+                        return;
+                    }
+                    event.setDamage(0.25D);
+                }
+                if (cpType == Material.GOLD_CHESTPLATE) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.28D);
+                        return;
+                    }
+                    event.setDamage(0.20D);
+                }
+                if (cpType == Material.CHAINMAIL_CHESTPLATE) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.28D);
+                        return;
+                    }
+                    event.setDamage(0.20D);
+                }
+                if (cpType == Material.IRON_CHESTPLATE) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.21D);
+                        return;
+                    }
+                    event.setDamage(0.15D);
+                }
+                if (cpType == Material.DIAMOND_CHESTPLATE) {
+                    if (isCritical(damager)) {
+                        event.setDamage(0.112D);
+                        return;
+                    }
+                    event.setDamage(0.08D);
+                }
             }
         }
+    }
+
+
+    /**
+     * クリティカルかどうか
+     * @param p
+     * @return
+     */
+    public boolean isCritical(Player p) {
+        return (p.getVelocity().getY() + 0.0784000015258789) <= 0;
     }
 
     @EventHandler
@@ -205,22 +273,8 @@ public class PlayerListener implements Listener {
 
         if (player.isOnline()) {
             gamePlayer.enableWatching();
-            GroundUtility.doGroundFix(player);
             ChatUtility.broadcast(ChatColor.GREEN + "There are " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countWatching() + ChatColor.DARK_GRAY + "]"
                     + ChatColor.GREEN + " spectators watching the game.");
-        }
-    }
-
-    @EventHandler
-    public void onDeathEntity(EntityDeathEvent event) {
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
-
-            GameTask gameTask = HSG.getGameTask();
-            GamePlayer gp = gameTask.getGamePlayer(player);
-            event.setDroppedExp(0);
-            gp.respawn();
-            player.getWorld().strikeLightningEffect(player.getLocation());
         }
     }
 
@@ -239,7 +293,8 @@ public class PlayerListener implements Listener {
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             e.setDroppedExp(0);
             deadGP.respawn();
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + ChatColor.DARK_GREEN + dead.getName());
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
             return;
         }
         //自滅の場合②
@@ -248,17 +303,21 @@ public class PlayerListener implements Listener {
             location.getWorld().strikeLightningEffect(location);
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             e.setDroppedExp(0);
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             deadGP.respawn();
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + ChatColor.DARK_GREEN + dead.getName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
         } else {
             Location location = dead.getLocation();
             location.getWorld().strikeLightningEffect(location);
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
             killerGP.getPlayerData().updateKill(1);
+            ChatUtility.sendMessage(killer, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                    + "[" + ChatColor.YELLOW + killerGP.getPlayerData().calculatedAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for killing " + HotsCore.getHotsPlayer(dead).getColorName());
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             e.setDroppedExp(0);
             deadGP.respawn();
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + ChatColor.DARK_GREEN + dead.getName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
         }
     }
 
@@ -358,15 +417,13 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onInteract(PlayerInteractEvent event){
-        if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            Player player = event.getPlayer();
-            GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
-            if(gamePlayer == null)return;
-            if(gamePlayer.isWatching()) {
-                if (player.getTargetBlock(null, 5).getType() == Material.FIRE) {
-                    event.setCancelled(true);
-                }
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
+        if (gamePlayer == null) return;
+        if (gamePlayer.isWatching()) {
+            if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR) {
+                event.setCancelled(true);
             }
         }
     }

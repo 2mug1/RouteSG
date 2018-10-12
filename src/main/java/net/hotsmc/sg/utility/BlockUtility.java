@@ -4,13 +4,14 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BlockUtility {
 
-    public static List<Block> getEnderChests(Location loc1, Location loc2, World w){
+    public static List<Block> getEnderChests(Location loc1, Location loc2, World w) {
 
         //First of all, we create the list:
         List<Block> blocks = new ArrayList<>();
@@ -30,44 +31,43 @@ public class BlockUtility {
         int x, y, z;
 
         //Now we need to make sure xMin is always lower then xMax
-        if(x1 > x2){ //If x1 is a higher number then x2
+        if (x1 > x2) { //If x1 is a higher number then x2
             xMin = x2;
             xMax = x1;
-        }else{
+        } else {
             xMin = x1;
             xMax = x2;
         }
 
         //Same with Y
-        if(y1 > y2){
+        if (y1 > y2) {
             yMin = y2;
             yMax = y1;
-        }else{
+        } else {
             yMin = y1;
             yMax = y2;
         }
 
         //And Z
-        if(z1 > z2){
+        if (z1 > z2) {
             zMin = z2;
             zMax = z1;
-        }else{
+        } else {
             zMin = z1;
             zMax = z2;
         }
 
         //Now it's time for the loop
-        for(x = xMin; x <= xMax; x ++){
-            for(y = yMin; y <= yMax; y ++){
-                for(z = zMin; z <= zMax; z ++){
+        for (x = xMin; x <= xMax; x++) {
+            for (y = yMin; y <= yMax; y++) {
+                for (z = zMin; z <= zMax; z++) {
                     Block b = new Location(w, x, y, z).getBlock();
-                    if(b.getType() == Material.ENDER_CHEST){
+                    if (b.getType() == Material.ENDER_CHEST) {
                         blocks.add(b);
                     }
                 }
             }
         }
-
         //And last but not least, we return with the list
         return blocks;
     }

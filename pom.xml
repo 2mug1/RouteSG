@@ -29,6 +29,14 @@
             <systemPath>G:/Desktop/HotsNetwork/maven/server.jar</systemPath>
         </dependency>
         <dependency>
+            <groupId>net.hotsmc.core</groupId>
+            <artifactId>HotsCore</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>G:/Desktop/HotsNetwork/servers/Hub/plugins/HotsCore-1.0-SNAPSHOT-shaded.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver</artifactId>
             <version>3.8.1</version>

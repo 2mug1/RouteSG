@@ -3,11 +3,11 @@ package net.hotsmc.sg.game;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
+import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.task.StrikeLightningTask;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.FireworkGenerator;
-import net.hotsmc.sg.utility.GroundUtility;
 import net.hotsmc.sg.utility.ServerUtility;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -201,7 +201,6 @@ public class GameTask {
             gamePlayer.setFrozen(true);
             gamePlayer.getPlayer().getInventory().clear();
             gamePlayer.getPlayer().updateInventory();
-            GroundUtility.doGroundFix(gamePlayer.getPlayer());
         }
     }
 
@@ -212,6 +211,7 @@ public class GameTask {
         voteManager.setVoting(false);
         for (GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.setVoted(false);
+            gamePlayer.getPlayerData().updatePlayed(1);
         }
         currentMap = voteManager.getDecidedMapData();
         ChatUtility.broadcast(ChatColor.YELLOW + "Loading " + currentMap.getName() + "...");
@@ -270,7 +270,7 @@ public class GameTask {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if(HSG.getGameTask().getState() != GameState.DeathMatch || circleSize <= 0){
+                if (HSG.getGameTask().getState() != GameState.DeathMatch || circleSize <= 0) {
                     this.cancel();
                     return;
                 }
@@ -297,13 +297,8 @@ public class GameTask {
         state = GameState.EndGame;
         ChatUtility.broadcast(ChatColor.GREEN + "The games have ended!");
         Bukkit.getServer().setMaxPlayers(24);
-        List<GamePlayer> gamePlayers = Lists.newArrayList();
-        for (GamePlayer gamePlayer1 : getGamePlayers()) {
-            if (!gamePlayer1.isWatching()) {
-                gamePlayers.add(gamePlayer1);
-            }
-        }
         List<PlayerHealth> playerHealths = Lists.newArrayList();
+
         if(countAlive() >= 2){
             for(GamePlayer gamePlayer : gamePlayers){
                 if(!gamePlayer.isWatching()){
@@ -311,11 +306,23 @@ public class GameTask {
                 }
             }
             playerHealths.sort(new HealthComparator());
-            ChatUtility.broadcast(ChatColor.DARK_GREEN + playerHealths.get(0).getGamePlayer().getPlayer().getName() + ChatColor.GREEN + " has won the Survival Games!");
+            GamePlayer winner = playerHealths.get(0).getGamePlayer();
+            winner.getPlayerData().updateWin(1);
+            ChatUtility.broadcast(ChatColor.DARK_GREEN + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
         }
+
         if(countAlive() == 1) {
-            ChatUtility.broadcast(ChatColor.DARK_GREEN + gamePlayers.get(0).getPlayer().getName() + ChatColor.GREEN + " has won the Survival Games!");
+            List<GamePlayer> a = Lists.newArrayList();
+            for (GamePlayer gamePlayer1 : getGamePlayers()) {
+                if (!gamePlayer1.isWatching()) {
+                    a.add(gamePlayer1);
+                }
+            }
+            GamePlayer winner = a.get(0);
+            winner.getPlayerData().updateWin(1);
+            ChatUtility.broadcast(ChatColor.DARK_GREEN + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
         }
+
         Bukkit.getWorld(getCurrentMap().getName()).setTime(18000);
         //打上花火
         for (int i = 0; i < getCurrentMap().getSpawns().size(); i++) {

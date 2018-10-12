@@ -7,6 +7,7 @@ import net.hotsmc.sg.database.MongoConnection;
 import net.hotsmc.sg.utility.MongoUtility;
 import org.bson.Document;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 
@@ -39,7 +40,7 @@ public class PlayerData {
     }
 
     private static MongoConnection getMongoConnection() {
-        return HSG.getInstance().getMongoConnection();
+        return HSG.getMongoConnection();
     }
 
     private Document findByUUID() {
@@ -63,7 +64,7 @@ public class PlayerData {
         document.put("WIN", 0);
         document.put("PLAYED", 0);
         document.put("KILL", 0);
-        document.put("POINT", 500);
+        document.put("POINT", 1000);
         document.put("CHESTS", 0);
         document.put("HIGHEST_RANK", 0);
         document.put("SIDEBAR_MINIMIZE", false);
@@ -128,6 +129,24 @@ public class PlayerData {
     public void withdrawPoint(int amount){
         this.point = point-amount;
         updateInteger("POINT", this.point);
+    }
+
+    public int calculatedAddPoint(){
+        double addPoint = this.point/1.05;
+        BigDecimal bd = new BigDecimal(addPoint);
+        BigDecimal bd1 = bd.setScale(0, BigDecimal.ROUND_HALF_UP);
+        int result = bd1.intValue();
+        addPoint(result);
+        return result;
+    }
+
+    public int calculatedWithdrawPoint(){
+        double addPoint = this.point/0.05;
+        BigDecimal bd = new BigDecimal(addPoint);
+        BigDecimal bd1 = bd.setScale(0, BigDecimal.ROUND_HALF_UP);
+        int result = bd1.intValue();
+        withdrawPoint(result);
+        return result;
     }
 
     public void updateChests(int amount){

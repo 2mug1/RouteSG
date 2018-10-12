@@ -3,6 +3,7 @@ package net.hotsmc.sg;
 import com.google.common.collect.Lists;
 import io.github.leonardosnt.bungeechannelapi.BungeeChannelApi;
 import lombok.Getter;
+import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.command.*;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
@@ -38,10 +39,13 @@ public class HSG extends JavaPlugin {
     @Getter
     private BungeeChannelApi bungeeChannelApi;
 
+    private HotsCore hotsCore;
+
     @Override
     public void onEnable() {
         instance = this;
         bungeeChannelApi = BungeeChannelApi.of(this);
+        hotsCore = HotsCore.getInstance();
         settings = new Settings(new ConfigCursor(new FileConfig(this, "Settings.yml"), "settings"));
         mapManager = new MapManager(this);
         mapManager.load();

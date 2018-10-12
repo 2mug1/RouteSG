@@ -3,6 +3,9 @@ package net.hotsmc.sg.game;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
+import net.hotsmc.core.HotsCore;
+import net.hotsmc.core.player.HotsPlayer;
+import net.hotsmc.core.player.PlayerRank;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.utility.ChatUtility;
 import org.bukkit.ChatColor;
@@ -45,7 +48,7 @@ public class VoteManager {
     public void send(Player player){
         ChatUtility.sendMessage(player,ChatColor.DARK_GREEN + "Vote using " + ChatColor.DARK_GRAY + "[" + ChatColor.GREEN + "/vote #" + ChatColor.DARK_GRAY + "].");
         for(VoteMap voteMap : voteMaps){
-            ChatUtility.sendMessage(player,"" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦" + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
+            ChatUtility.sendMessage(player,"" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
                     " Votes " + ChatColor.DARK_GRAY + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
         }
     }
@@ -54,7 +57,7 @@ public class VoteManager {
     public void broadcast(){
         ChatUtility.broadcast(ChatColor.DARK_GREEN + "Vote using " + ChatColor.DARK_GRAY + "[" + ChatColor.GREEN + "/vote #" + ChatColor.DARK_GRAY + "].");
         for(VoteMap voteMap : voteMaps){
-            ChatUtility.broadcast("" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦" + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
+            ChatUtility.broadcast("" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
                     " Votes " + ChatColor.DARK_GRAY + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
         }
     }
@@ -67,14 +70,41 @@ public class VoteManager {
             ChatUtility.sendMessage(gamePlayer, ChatColor.RED + "You have already voted.");
             return;
         }
-        if(voteID > 5){
+        if(voteID > 5) {
             ChatUtility.sendMessage(gamePlayer, ChatColor.RED + "Vote ID of maximum is 5.");
-        }else{
-            VoteMap voteMap = getVoteMap(voteID);
-            voteMap.addVote(1);
-            gamePlayer.setVoted(true);
-            ChatUtility.sendMessage(gamePlayer, ChatColor.GREEN + "You have voted to " + ChatColor.YELLOW + getVoteMap(voteID).getMapName() + ".");
+            return;
         }
+        VoteMap voteMap = getVoteMap(voteID);
+        HotsPlayer hotsPlayer = HotsCore.getHotsPlayer(gamePlayer.getPlayer());
+        if(hotsPlayer == null)return;
+        int votes = 1;
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Owner.getPermissionLevel()) {
+            votes = 6;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Administrator.getPermissionLevel()) {
+            votes = 6;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Moderator.getPermissionLevel()) {
+            votes = 5;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.VIP.getPermissionLevel()) {
+            votes = 5;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Emerald.getPermissionLevel()) {
+            votes = 4;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Diamond.getPermissionLevel()) {
+            votes = 3;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Gold.getPermissionLevel()) {
+            votes = 2;
+        }
+        if(hotsPlayer.getPlayerRank().getPermissionLevel() == PlayerRank.Regular.getPermissionLevel()) {
+            votes = 1;
+        }
+        voteMap.addVote(votes);
+        gamePlayer.setVoted(true);
+        ChatUtility.sendMessage(gamePlayer, ChatColor.GREEN + "You have voted " +  ChatColor.YELLOW + votes + ChatColor.GREEN +  " for " + ChatColor.YELLOW + getVoteMap(voteID).getMapName());
     }
 
     /**
@@ -84,9 +114,5 @@ public class VoteManager {
     public MapData getDecidedMapData(){
         voteMaps.sort(new VoteMapComparator());
         return HSG.getMapManager().getMapData(voteMaps.get(0).getMapName());
-    }
-
-    public void clear() {
-        voteMaps.clear();
     }
 }

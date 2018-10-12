@@ -1,14 +1,14 @@
 package net.hotsmc.sg.utility;
 
 import net.hotsmc.sg.game.GamePlayer;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class ChatUtility {
 
-    public static String PLUGIN_MESSAGE_PREFIX = "" + ChatColor.AQUA + ChatColor.BOLD + "Hots" + ChatColor.LIGHT_PURPLE + ChatColor.BOLD + "SG" + ChatColor.DARK_GRAY + " » " + ChatColor.RESET;
+    public static String PLUGIN_MESSAGE_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "MCSG" + ChatColor.DARK_GRAY + "] " + ChatColor.RESET;
 
     private static String format(String message) {
         return PLUGIN_MESSAGE_PREFIX + message;

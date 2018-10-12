@@ -1,6 +1,8 @@
 name: HotsSG
 main: net.hotsmc.sg.HSG
 version: 1.0
+loadbefore: [HotsCore]
+softdepend: [HotsCore]
 commands:
   hsg:
   sidebar:

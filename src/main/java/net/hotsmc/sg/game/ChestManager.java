@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -45,18 +46,14 @@ public class ChestManager implements Listener {
     }
 
     public void fillChest(TierType type, Chest chest) {
+
         Inventory inventory = chest.getInventory();
         inventory.clear();
         Random r = new Random();
         int next;
-        //Tier1の処理
-        if (type == TierType.TIER1) {
-            if (inventory instanceof DoubleChestInventory) {
-                next = maxItemSlot * 2;
-            } else {
-                next = maxItemSlot;
 
-            }
+        if (type == TierType.TIER1) {
+            next = maxItemSlot;
 
             for (int i = 0; i < next; i++) {
                 ItemStack item = tier1Items.get(r.nextInt(tier1Items.size()));
@@ -68,18 +65,49 @@ public class ChestManager implements Listener {
             return;
         }
 
-        //Tier2の処理
+
         if (type == TierType.TIER2) {
-            if (inventory instanceof DoubleChestInventory) {
 
-                next = maxItemSlot * 2;
-            } else {
-                next = maxItemSlot;
+            next = maxItemSlot;
 
-            }
             for (int i = 0; i < next; i++) {
                 ItemStack item = tier2Items.get(r.nextInt(tier2Items.size()));
                 int slot = r.nextInt(chest.getInventory().getSize());
+                if (!inventory.contains(item)) {
+                    inventory.setItem(slot, item);
+                }
+            }
+        }
+    }
+
+
+    public void fillDoubleChest(TierType type, DoubleChest doubleChest) {
+
+        Random r = new Random();
+        Inventory inventory = doubleChest.getInventory();
+        int next;
+
+        if (inventory instanceof DoubleChestInventory) {
+            if (type == TierType.TIER1) {
+                next = maxItemSlot * 2;
+
+                for (int i = 0; i < next; i++) {
+                    ItemStack item = tier1Items.get(r.nextInt(tier1Items.size()));
+                    int slot = r.nextInt(doubleChest.getInventory().getSize());
+                    if (!inventory.contains(item)) {
+                        inventory.setItem(slot, item);
+                    }
+                }
+            }
+            return;
+        }
+
+        if (type == TierType.TIER2) {
+            next = maxItemSlot * 2;
+
+            for (int i = 0; i < next; i++) {
+                ItemStack item = tier1Items.get(r.nextInt(tier2Items.size()));
+                int slot = r.nextInt(doubleChest.getInventory().getSize());
                 if (!inventory.contains(item)) {
                     inventory.setItem(slot, item);
                 }
@@ -124,15 +152,36 @@ public class ChestManager implements Listener {
         if (HSG.getGameTask().getState() == GameState.LiveGame || HSG.getGameTask().getState() == GameState.PreDeathMatch || HSG.getGameTask().getState() == GameState.DeathMatch) {
             if ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && (event.getClickedBlock().getType() == Material.CHEST)) {
                 BlockState blockState = event.getClickedBlock().getState();
+                if(blockState instanceof DoubleChest){
+                    DoubleChest doubleChest = (DoubleChest) blockState;
+                    Location left = ((Chest) doubleChest.getLeftSide()).getLocation();
+                    Location right = ((Chest) doubleChest.getRightSide()).getLocation();
+                    if (!openedChestLocations.contains(left) &&!openedChestLocations.contains(right) ) {
+                        openedChestLocations.add(left);
+                        openedChestLocations.add(right);
+                        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(event.getPlayer());
+                        if(gamePlayer == null)return;
+                        if (tier2ChestLocations.contains(left) && tier2ChestLocations.contains(right)) {
+                            fillDoubleChest(TierType.TIER2, doubleChest);
+                        } else {
+                            fillDoubleChest(TierType.TIER1, doubleChest);
+                        }
+                        gamePlayer.getPlayerData().updateChests(1);
+                    }
+                    return;
+                }
                 if (blockState instanceof Chest) {
                     Chest chest = (Chest) blockState;
                     Location location = chest.getLocation();
                     if (!openedChestLocations.contains(location)) {
+                        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(event.getPlayer());
+                        if(gamePlayer == null)return;
                         if (tier2ChestLocations.contains(location)) {
                             fillChest(TierType.TIER2, chest);
                         } else {
                             fillChest(TierType.TIER1, chest);
                         }
+                        gamePlayer.getPlayerData().updateChests(1);
                         openedChestLocations.add(location);
                     }
                 }
