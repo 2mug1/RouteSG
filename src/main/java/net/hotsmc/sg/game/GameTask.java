@@ -11,6 +11,7 @@ import net.hotsmc.sg.utility.FireworkGenerator;
 import net.hotsmc.sg.utility.ServerUtility;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
@@ -21,12 +22,14 @@ public class GameTask {
 
     private GameConfig gameConfig;
     private GameState state;
+    private VoteManager voteManager;
     private ChestManager chestManager;
+    private BountyManager bountyManager;
     private int time;
     private MapData currentMap = null;
     private List<GamePlayer> gamePlayers;
     private boolean timerFlag = false;
-    private VoteManager voteManager;
+
     private int circleSize = 57;
 
 
@@ -37,6 +40,7 @@ public class GameTask {
         gamePlayers = Lists.newArrayList();
         voteManager = new VoteManager();
         chestManager = new ChestManager();
+        bountyManager = new BountyManager();
         chestManager.loadTierItems();
     }
 
@@ -298,17 +302,34 @@ public class GameTask {
         ChatUtility.broadcast(ChatColor.GREEN + "The games have ended!");
         Bukkit.getServer().setMaxPlayers(24);
         List<PlayerHealth> playerHealths = Lists.newArrayList();
+        GamePlayer winner = null;
 
-        if(countAlive() >= 2){
+        if(countAlive() == 3){
             for(GamePlayer gamePlayer : gamePlayers){
                 if(!gamePlayer.isWatching()){
                     playerHealths.add(new PlayerHealth(gamePlayer, (double) gamePlayer.getPlayer().getHealth()));
                 }
             }
             playerHealths.sort(new HealthComparator());
-            GamePlayer winner = playerHealths.get(0).getGamePlayer();
+            winner = playerHealths.get(0).getGamePlayer();
             winner.getPlayerData().updateWin(1);
-            ChatUtility.broadcast(ChatColor.DARK_GREEN + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
+        }
+
+        if(countAlive() == 2){
+            for(GamePlayer gamePlayer : gamePlayers){
+                if(!gamePlayer.isWatching()){
+                    playerHealths.add(new PlayerHealth(gamePlayer, (double) gamePlayer.getPlayer().getHealth()));
+                }
+            }
+            playerHealths.sort(new HealthComparator());
+            winner = playerHealths.get(0).getGamePlayer();
+            winner.getPlayerData().updateWin(1);
+            ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
         }
 
         if(countAlive() == 1) {
@@ -318,16 +339,37 @@ public class GameTask {
                     a.add(gamePlayer1);
                 }
             }
-            GamePlayer winner = a.get(0);
+             winner = a.get(0);
             winner.getPlayerData().updateWin(1);
-            ChatUtility.broadcast(ChatColor.DARK_GREEN + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
         }
 
+        //Bountyされていたら
+        if(bountyManager.wasBountiedMe(winner)) {
+            List<BountyData> bountyData = bountyManager.getBounties(winner);
+            for (BountyData bountyData1 : bountyData) {
+                GamePlayer sender = bountyData1.getSender();
+                if (sender.getPlayer().isOnline()) {
+                    int points = bountyData1.getPoints();
+
+                    int addPoints = (int) (points * 1.70) - points;
+
+                    //優勝したら賭けたプレイヤーに賭けたポイント分の70%あげる
+                    bountyData1.getSender().getPlayerData().addPoint(addPoints);
+
+                    ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for won the game " + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName());
+                }
+            }
+        }
+        
         Bukkit.getWorld(getCurrentMap().getName()).setTime(18000);
+
         //打上花火
         for (int i = 0; i < getCurrentMap().getSpawns().size(); i++) {
             FireworkGenerator fwg = new FireworkGenerator(HSG.getInstance());
-            fwg.setLocation(getCurrentMap().getSpawns().get(i).add(0, 3, 0));
+            fwg.setLocation(getCurrentMap().getSpawns().get(i));
             fwg.setPower(2);
             fwg.setEffect(FireworkEffect.builder().withColor(Color.RED).with(FireworkEffect.Type.BALL_LARGE).withFlicker().withTrail().withColor(Color.BLUE).withColor(Color.GREEN).build());
             fwg.setLifeTime(20);
@@ -354,6 +396,7 @@ public class GameTask {
             ChatUtility.sendMessage(player, ChatColor.GRAY + "Connecting to " + ChatColor.GREEN + "Hub");
             HSG.getInstance().getBungeeChannelApi().connect(player, "hub");
         }
+        bountyManager.clearBountyData();
         time = gameConfig.getLobbyTime();
         state = GameState.Lobby;
     }
@@ -401,6 +444,26 @@ public class GameTask {
      *
      */
     private void tickPreGame(){
+        //スコップわたす～～
+        if(time == 15){
+            for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+                for (int i = 0; i < 9; i++) {
+                    player.getInventory().setItem(i, new ItemStack(Material.WOOD_SPADE));
+                }
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if(!player.isOnline()){
+                            this.cancel();
+                            return;
+                        }
+                        player.getInventory().clear();
+                        player.updateInventory();
+                        this.cancel();
+                    }
+                }.runTaskLater(HSG.getInstance(), 1);
+            }
+        }
         if(countAlive() == 1){
             onEndGame();
         }

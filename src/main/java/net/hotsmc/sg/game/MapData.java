@@ -8,6 +8,7 @@ import net.hotsmc.sg.utility.PositionInfo;
 import net.hotsmc.sg.utility.WorldDataUtility;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.swing.*;
 import javax.xml.bind.Marshaller;
@@ -60,8 +61,7 @@ public class MapData {
 
     public void loadWorld(){
         WorldDataUtility.copyWorld(new File(HSG.getInstance().getDataFolder().getAbsolutePath() + "/worlds/" + name), new File(Bukkit.getServer().getWorldContainer().getAbsolutePath() + "/" + name));
-        Bukkit.getServer().getWorlds().add(Bukkit.getServer().createWorld(new WorldCreator(name)));
-        World world = Bukkit.getServer().getWorld(name);
+        World world = Bukkit.getServer().createWorld(new WorldCreator(name));
         world.setAutoSave(false);
         world.setGameRuleValue("doDaylightCycle", "false");
         world.setGameRuleValue("keepInventory", "false");
@@ -81,6 +81,13 @@ public class MapData {
         max = cursor.getLocation("MaxLocation");
         spawns = getSpawnLocations();
         deathmatchSpawns = getDeathmatchLocations();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                this.cancel();
+            }
+        }.runTaskLater(HSG.getInstance(), 20*2);
     }
 
     public void unloadWorld(){

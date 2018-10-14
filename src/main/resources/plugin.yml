@@ -7,5 +7,9 @@ commands:
   hsg:
   sidebar:
   spec:
+  stats:
+  bounty:
+  list:
+    aliases: [l]
   vote:
     aliases: [v]

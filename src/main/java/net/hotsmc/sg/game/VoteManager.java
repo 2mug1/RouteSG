@@ -48,8 +48,8 @@ public class VoteManager {
     public void send(Player player){
         ChatUtility.sendMessage(player,ChatColor.DARK_GREEN + "Vote using " + ChatColor.DARK_GRAY + "[" + ChatColor.GREEN + "/vote #" + ChatColor.DARK_GRAY + "].");
         for(VoteMap voteMap : voteMaps){
-            ChatUtility.sendMessage(player,"" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
-                    " Votes " + ChatColor.DARK_GRAY + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
+            ChatUtility.sendMessage(player,"" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + ChatColor.BOLD + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
+                    " Votes " + ChatColor.DARK_GRAY + ChatColor.BOLD + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
         }
     }
 
@@ -57,8 +57,8 @@ public class VoteManager {
     public void broadcast(){
         ChatUtility.broadcast(ChatColor.DARK_GREEN + "Vote using " + ChatColor.DARK_GRAY + "[" + ChatColor.GREEN + "/vote #" + ChatColor.DARK_GRAY + "].");
         for(VoteMap voteMap : voteMaps){
-            ChatUtility.broadcast("" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
-                    " Votes " + ChatColor.DARK_GRAY + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
+            ChatUtility.broadcast("" + ChatColor.GREEN + voteMap.getVoteID() + ChatColor.DARK_GRAY + ChatColor.BOLD + " > ¦ " + ChatColor.YELLOW + voteMap.getVotes() + ChatColor.GRAY +
+                    " Votes " + ChatColor.DARK_GRAY + ChatColor.BOLD + " ¦ " + ChatColor.DARK_GREEN + voteMap.getMapName());
         }
     }
 

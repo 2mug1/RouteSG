@@ -1,4 +1,4 @@
-package net.hotsmc.sg.utility;
+package net.hotsmc.sg.menu;
 
 import java.io.Serializable;
 

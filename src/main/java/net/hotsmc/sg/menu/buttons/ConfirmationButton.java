@@ -3,7 +3,7 @@ package net.hotsmc.sg.menu.buttons;
 import lombok.AllArgsConstructor;
 import net.hotsmc.sg.menu.Button;
 import net.hotsmc.sg.utility.CC;
-import net.hotsmc.sg.utility.TypeCallback;
+import net.hotsmc.sg.menu.TypeCallback;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;

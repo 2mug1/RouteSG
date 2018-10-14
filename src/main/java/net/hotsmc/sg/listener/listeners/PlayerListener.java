@@ -23,6 +23,8 @@ import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
+
 public class PlayerListener implements Listener {
 
     @EventHandler
@@ -96,8 +98,8 @@ public class PlayerListener implements Listener {
                 }
             }
             PlayerUtility.clearEffects(player);
-            world.strikeLightningEffect(location);
-            ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
+            //world.strikeLightningEffect(location);
+            //ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
         }
         HSG.getGameTask().removeGamePlayer(gamePlayer);
     }
@@ -107,7 +109,7 @@ public class PlayerListener implements Listener {
         if (e.getEntity() instanceof Player) {
             GameTask gameTask = HSG.getGameTask();
             GameState state = gameTask.getState();
-            if (state == GameState.Lobby) {
+            if (state == GameState.Lobby || state == GameState.PreGame) {
                 e.setCancelled(true);
                 return;
             }
@@ -172,77 +174,8 @@ public class PlayerListener implements Listener {
             GamePlayer damagedGP = gameTask.getGamePlayer(damaged);
             if (damagedGP.isWatching() || damagerGP.isWatching()) {
                 event.setCancelled(true);
-                return;
-            }
-
-            //ダイヤモンドパンチ対策 これで解決するはず
-            ItemStack itemStack = damager.getItemInHand();
-            if (itemStack == null) return;
-            Material type = itemStack.getType();
-            if (type != Material.WOOD_SWORD && type != Material.STONE_SWORD && type != Material.GOLD_SWORD &&
-                    type != Material.IRON_SWORD && type != Material.DIAMOND_SWORD && type != Material.WOOD_SPADE &&
-                    type != Material.STONE_SPADE && type != Material.GOLD_SPADE && type != Material.IRON_SPADE &&
-                    type != Material.DIAMOND_SPADE && type != Material.WOOD_AXE && type != Material.GOLD_AXE &&
-                    type != Material.STONE_AXE && type != Material.IRON_AXE && type != Material.DIAMOND_AXE &&
-                    type != Material.WOOD_PICKAXE && type != Material.GOLD_PICKAXE && type != Material.STONE_PICKAXE &&
-                    type != Material.IRON_PICKAXE && type != Material.DIAMOND_PICKAXE) {
-                ItemStack cp = damaged.getEquipment().getChestplate();
-                if (cp == null) return;
-                Material cpType = cp.getType();
-                if (cpType == Material.AIR) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.7D);
-                        return;
-                    }
-                    event.setDamage(0.5D);
-                }
-                if (cpType == Material.LEATHER_CHESTPLATE) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.35D);
-                        return;
-                    }
-                    event.setDamage(0.25D);
-                }
-                if (cpType == Material.GOLD_CHESTPLATE) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.28D);
-                        return;
-                    }
-                    event.setDamage(0.20D);
-                }
-                if (cpType == Material.CHAINMAIL_CHESTPLATE) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.28D);
-                        return;
-                    }
-                    event.setDamage(0.20D);
-                }
-                if (cpType == Material.IRON_CHESTPLATE) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.21D);
-                        return;
-                    }
-                    event.setDamage(0.15D);
-                }
-                if (cpType == Material.DIAMOND_CHESTPLATE) {
-                    if (isCritical(damager)) {
-                        event.setDamage(0.112D);
-                        return;
-                    }
-                    event.setDamage(0.08D);
-                }
             }
         }
-    }
-
-
-    /**
-     * クリティカルかどうか
-     * @param p
-     * @return
-     */
-    public boolean isCritical(Player p) {
-        return (p.getVelocity().getY() + 0.0784000015258789) <= 0;
     }
 
     @EventHandler
@@ -273,6 +206,7 @@ public class PlayerListener implements Listener {
 
         if (player.isOnline()) {
             gamePlayer.enableWatching();
+            ChatUtility.broadcast("" + ChatColor.GREEN + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countAlive() + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + " tributes remain!");
             ChatUtility.broadcast(ChatColor.GREEN + "There are " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countWatching() + ChatColor.DARK_GRAY + "]"
                     + ChatColor.GREEN + " spectators watching the game.");
         }
@@ -285,6 +219,7 @@ public class PlayerListener implements Listener {
         Player dead = e.getEntity();
         Player killer = dead.getKiller();
         GameTask gameTask = HSG.getGameTask();
+        BountyManager bountyManager = gameTask.getBountyManager();
 
         //自滅の場合①
         if (killer == null) {
@@ -293,8 +228,25 @@ public class PlayerListener implements Listener {
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             e.setDroppedExp(0);
             deadGP.respawn();
-            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
+            deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            //Bountyされていたら
+            if(bountyManager.wasBountiedMe(deadGP)){
+                List<BountyData> bountyData = bountyManager.getBounties(deadGP);
+                for(BountyData bountyData1 : bountyData) {
+                    GamePlayer sender = bountyData1.getSender();
+                    if (sender.getPlayer().isOnline()) {
+                        int points = bountyData1.getPoints();
+
+                        //賭けたプレイヤーから賭けたポイント分引く
+                        bountyData1.getSender().getPlayerData().withdrawPoint(points);
+
+                        ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for dying " + HotsCore.getHotsPlayer(dead).getColorName());
+                    }
+                }
+            }
             return;
         }
         //自滅の場合②
@@ -303,21 +255,74 @@ public class PlayerListener implements Listener {
             location.getWorld().strikeLightningEffect(location);
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             e.setDroppedExp(0);
-            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
+            deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             deadGP.respawn();
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            if(bountyManager.wasBountiedMe(deadGP)) {
+                List<BountyData> bountyData = bountyManager.getBounties(deadGP);
+                for (BountyData bountyData1 : bountyData) {
+                    GamePlayer sender = bountyData1.getSender();
+                    if (sender.getPlayer().isOnline()) {
+                        int points = bountyData1.getPoints();
+
+                        //賭けたプレイヤーから賭けたポイント分引く
+                        bountyData1.getSender().getPlayerData().withdrawPoint(points);
+
+                        ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for dying " + HotsCore.getHotsPlayer(dead).getColorName());
+                    }
+                }
+            }
         } else {
             Location location = dead.getLocation();
             location.getWorld().strikeLightningEffect(location);
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
             killerGP.getPlayerData().updateKill(1);
+            killerGP.getPlayerData().addPoint(deadGP.getPlayerData().calculatedPoint());
+            deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             ChatUtility.sendMessage(killer, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
-                    + "[" + ChatColor.YELLOW + killerGP.getPlayerData().calculatedAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for killing " + HotsCore.getHotsPlayer(dead).getColorName());
-            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedWithdrawPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
+                    + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for killing " + HotsCore.getHotsPlayer(dead).getColorName());
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             e.setDroppedExp(0);
             deadGP.respawn();
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            //死んだプレイヤーサイド
+            if(bountyManager.wasBountiedMe(deadGP)) {
+                List<BountyData> bountyData = bountyManager.getBounties(deadGP);
+                for (BountyData bountyData1 : bountyData) {
+                    GamePlayer sender = bountyData1.getSender();
+                    if (sender.getPlayer().isOnline()) {
+                        int points = bountyData1.getPoints();
+
+                        //賭けたプレイヤーから賭けたポイント分引く
+                        bountyData1.getSender().getPlayerData().withdrawPoint(points);
+
+                        ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for dying " + HotsCore.getHotsPlayer(dead).getColorName());
+                    }
+                }
+            }
+
+            //殺したプレイヤーサイド
+            if(bountyManager.wasBountiedMe(killerGP)) {
+                List<BountyData> bountyData = bountyManager.getBounties(killerGP);
+                for (BountyData bountyData1 : bountyData) {
+                    GamePlayer sender = bountyData1.getSender();
+                    if (sender.getPlayer().isOnline()) {
+                        int points = bountyData1.getPoints();
+
+                        //8％
+                        int addPoints = (int) (points * 1.08) - points;
+
+                        //賭けたプレイヤーに賭けたポイント分の8％あげる
+                        bountyData1.getSender().getPlayerData().addPoint(addPoints);
+
+                        ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for killing " + HotsCore.getHotsPlayer(killer).getColorName());
+                    }
+                }
+            }
         }
     }
 

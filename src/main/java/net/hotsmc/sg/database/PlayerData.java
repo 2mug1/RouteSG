@@ -1,15 +1,14 @@
 package net.hotsmc.sg.database;
 
+import com.mongodb.client.MongoCursor;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.database.MongoConnection;
 import net.hotsmc.sg.utility.MongoUtility;
 import org.bson.Document;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
@@ -30,8 +29,6 @@ public class PlayerData {
     private int point;
 
     private int chests;
-
-    private int highestRank;
 
     private boolean sidebarMinimize;
 
@@ -58,9 +55,11 @@ public class PlayerData {
     public void insertNewPlayerData() {
         Document document = new Document();
 
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
         document.put("UUID", uuid);
         document.put("NAME", name);
-        document.put("FIRST_PLAYED", new Timestamp(System.currentTimeMillis()).getTime());
+        document.put("FIRST_PLAYED", timestamp.getTime());
         document.put("WIN", 0);
         document.put("PLAYED", 0);
         document.put("KILL", 0);
@@ -68,6 +67,14 @@ public class PlayerData {
         document.put("CHESTS", 0);
         document.put("HIGHEST_RANK", 0);
         document.put("SIDEBAR_MINIMIZE", false);
+
+        setFirstPlayed(timestamp);
+        setWin(document.getInteger("WIN"));
+        setPlayed(document.getInteger("PLAYED"));
+        setKill(document.getInteger("KILL"));
+        setPoint(document.getInteger("POINT"));
+        setChests(document.getInteger("CHESTS"));
+        setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
 
         getMongoConnection().getPlayers().insertOne(document);
     }
@@ -88,7 +95,7 @@ public class PlayerData {
             setKill(document.getInteger("KILL"));
             setPoint(document.getInteger("POINT"));
             setChests(document.getInteger("CHESTS"));
-            setHighestRank(document.getInteger("HIGHEST_RANK"));
+            setFirstPlayed(new Timestamp(document.getLong("FIRST_PLAYED")));
             setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
 
             //データベースに登録されている名前と違ったら更新
@@ -122,31 +129,28 @@ public class PlayerData {
     }
 
     public void addPoint(int amount){
-        this.point = amount+point;
+        this.point = amount + this.point;
         updateInteger("POINT", this.point);
     }
 
     public void withdrawPoint(int amount){
-        this.point = point-amount;
+        this.point = this.point - amount;
         updateInteger("POINT", this.point);
     }
 
-    public int calculatedAddPoint(){
-        double addPoint = this.point/1.05;
-        BigDecimal bd = new BigDecimal(addPoint);
-        BigDecimal bd1 = bd.setScale(0, BigDecimal.ROUND_HALF_UP);
-        int result = bd1.intValue();
-        addPoint(result);
-        return result;
+
+    public int calculatedPoint(){
+        return (int) (this.point*1.08) - this.point;
     }
 
-    public int calculatedWithdrawPoint(){
-        double addPoint = this.point/0.05;
-        BigDecimal bd = new BigDecimal(addPoint);
-        BigDecimal bd1 = bd.setScale(0, BigDecimal.ROUND_HALF_UP);
-        int result = bd1.intValue();
-        withdrawPoint(result);
-        return result;
+    /**
+     * 勝ったら持ってるポイントの30％プラス
+     * @return
+     */
+    public int calculatedWinAddPoint(){
+        int add = (int) (this.point*1.30) - this.point;
+        addPoint(add);
+        return add;
     }
 
     public void updateChests(int amount){
@@ -154,9 +158,15 @@ public class PlayerData {
         updateInteger("CHESTS", this.chests);
     }
 
-    public void updateHighestRank(int highestRank){
-        this.highestRank = highestRank;
-        updateInteger("HIGHEST_RANK", this.highestRank);
+    public int getRank() {
+        int rank = 1;
+        for (Document document : getMongoConnection().getPlayers().find()) {
+            if (!document.getString("UUID").equals(uuid)) {
+                rank++;
+            }
+            return rank;
+        }
+        return rank;
     }
 
     public void updateSidebarMinimize(boolean sidebarMinimize){

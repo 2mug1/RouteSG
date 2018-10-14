@@ -70,6 +70,9 @@ public class HSG extends JavaPlugin {
         this.getCommand("vote").setExecutor(new VoteCommand());
         this.getCommand("sidebar").setExecutor(new SidebarCommand());
         this.getCommand("spec").setExecutor(new SpectateCommand());
+        this.getCommand("stats").setExecutor(new StatsCommand());
+        this.getCommand("list").setExecutor(new ListCommand());
+        this.getCommand("bounty").setExecutor(new BountyCommand());
     }
 
     public static List<Player> getOnlinePlayers() {

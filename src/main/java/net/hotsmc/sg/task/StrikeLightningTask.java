@@ -1,18 +1,16 @@
 package net.hotsmc.sg.task;
 
+import lombok.AllArgsConstructor;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.GameState;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+@AllArgsConstructor
 public class StrikeLightningTask extends BukkitRunnable {
 
     private Player player;
-
-    public StrikeLightningTask(Player player){
-        this.player = player;
-    }
 
     @Override
     public void run() {

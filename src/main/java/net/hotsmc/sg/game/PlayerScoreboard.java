@@ -16,7 +16,7 @@ import org.bukkit.scoreboard.Team;
 
 public class PlayerScoreboard extends BukkitRunnable {
 
-    private static final String WEB_URL = ChatColor.AQUA + "www.HotsMC.net";
+    private static final String WEB_URL = "" + ChatColor.AQUA + ChatColor.BOLD + "HotsMC.net";
 
     private Player player;
     private Scoreboard scoreboard;

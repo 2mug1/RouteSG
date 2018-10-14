@@ -3,7 +3,7 @@ package net.hotsmc.sg.menu.menus;
 import net.hotsmc.sg.menu.Button;
 import net.hotsmc.sg.menu.Menu;
 import net.hotsmc.sg.menu.buttons.ConfirmationButton;
-import net.hotsmc.sg.utility.TypeCallback;
+import net.hotsmc.sg.menu.TypeCallback;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;

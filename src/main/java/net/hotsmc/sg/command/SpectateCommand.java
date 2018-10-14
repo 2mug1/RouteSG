@@ -33,7 +33,7 @@ public class SpectateCommand implements CommandExecutor {
                 GamePlayer targetGP = HSG.getGameTask().getGamePlayer(target);
                 if(targetGP == null)return true;
                 if(targetGP.isWatching()){
-                    ChatUtility.sendMessage(player, ChatColor.RED + targetName + " isn't playing the game");
+                    ChatUtility.sendMessage(player, ChatColor.RED + targetName + " isn't playing the game.");
                 }else{
                     player.teleport(target);
                     ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + ChatColor.GREEN + targetName);

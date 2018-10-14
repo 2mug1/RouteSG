@@ -1,5 +1,8 @@
 package net.hotsmc.sg.command;
 
+import net.hotsmc.core.HotsCore;
+import net.hotsmc.core.player.HotsPlayer;
+import net.hotsmc.core.player.PlayerRank;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.TierType;
 import net.hotsmc.sg.game.MapManager;
@@ -18,8 +21,10 @@ public class SettingCommand implements CommandExecutor {
             ChatUtility.sendMessage(commandSender, "You're not player");
         } else {
             Player player = (Player) commandSender;
-            if (!player.isOp()) {
-                ChatUtility.sendMessage(player, "You don't have permission");
+            HotsPlayer hotsPlayer = HotsCore.getHotsPlayer(player);
+            //権限レベル確認
+            if (PlayerRank.Administrator.getPermissionLevel() > hotsPlayer.getPlayerRank().getPermissionLevel()) {
+                ChatUtility.sendMessage(player, ChatColor.RED + "You don't have permission.");
                 return true;
             }
             if (args.length == 0) {

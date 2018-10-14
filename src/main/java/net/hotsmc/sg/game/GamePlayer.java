@@ -1,7 +1,10 @@
 package net.hotsmc.sg.game;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.Setter;
+import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.game.PlayerScoreboard;
@@ -18,6 +21,8 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -90,5 +95,13 @@ public class GamePlayer {
             startScoreboard(true);
             ChatUtility.sendMessage(player, ChatColor.GRAY + "Sidebar minimize has " + ChatColor.GREEN + "enabled");
         }
+    }
+
+    public void bountyPlayer(GamePlayer target, int point) {
+        ChatUtility.broadcast(ChatColor.DARK_AQUA + "Bounty has been set on " + HotsCore.getHotsPlayer(player).getColorName() +
+                ChatColor.DARK_AQUA + " of " + HotsCore.getHotsPlayer(target.getPlayer()).getColorName() + ChatColor.DARK_AQUA + " for " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + point + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + "points" + ChatColor.DARK_GRAY + ".");
+
+        //Bounty
+        HSG.getGameTask().getBountyManager().addBounty(new BountyData(this, target, point));
     }
 }
