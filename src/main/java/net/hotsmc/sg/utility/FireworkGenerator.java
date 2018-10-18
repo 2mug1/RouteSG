@@ -5,6 +5,7 @@ import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftFirework;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
@@ -86,9 +87,9 @@ public class FireworkGenerator {
     }
 
     public void spawn(){
-        this.firework = (Firework)this.location.getWorld().spawnEntity(this.location, EntityType.FIREWORK);
+        this.firework = location.getWorld().spawn(location, CraftFirework.class);
         this.spawnlocation = this.location;
-        this.fireworkmeta = (FireworkMeta)this.firework.getFireworkMeta();
+        this.fireworkmeta = this.firework.getFireworkMeta();
         if(this.fireworkeffect != null){
             this.fireworkmeta.addEffect(this.fireworkeffect);
         }
@@ -96,13 +97,7 @@ public class FireworkGenerator {
         this.firework.setFireworkMeta(this.fireworkmeta);
 
         if(this.LifeTime != 0){
-            Bukkit.getScheduler().runTaskLater(this.plugin, new Runnable() {
-
-                @Override
-                public void run() {
-                    detonate();
-                }
-            }, this.LifeTime);
+            Bukkit.getScheduler().runTaskLater(this.plugin, this::detonate, this.LifeTime);
         }
     }
 

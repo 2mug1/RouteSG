@@ -34,7 +34,7 @@ public class PlayerUtility {
                 ((CraftPlayer) player).getHandle().playerConnection.a(packet);
             }
             //0.25秒後に自動リスポーン
-        }.runTaskLater(HSG.getInstance(), 5);
+        }.runTaskLater(HSG.getInstance(), 1);
     }
 
     public static void clearEffects(Player player) {

@@ -12,10 +12,7 @@ import net.minecraft.server.v1_7_R4.PacketPlayOutBlockAction;
 import net.minecraft.server.v1_7_R4.TileEntityChest;
 import net.minecraft.server.v1_7_R4.WorldServer;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
+import org.bukkit.block.*;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R4.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
@@ -28,6 +25,7 @@ import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.material.EnderChest;
 
 import java.util.List;
 import java.util.Map;
@@ -59,24 +57,18 @@ public class ChestManager implements Listener {
     public void loadAllChest(MapData mapData) {
         chests.clear();
 
-        World world = mapData.getDefaultSpawn().getWorld();
-        Location max = mapData.getMax();
-        Location min = mapData.getMin();
-
         //Tier1読み込み
-        for(Block block : BlockUtility.getChestBlocks(max, min, world)) {
+        for(Block block : mapData.getChests()) {
             if (block.getType() == Material.CHEST) {
-                Chest chest = (Chest) block.getState();
-                chests.add(new GameChest(false, chest.getLocation()));
+                chests.add(new GameChest(false, block.getLocation()));
             }
         }
 
         //Tier2読み込み
-        for(Block block : BlockUtility.getEnderChestBlocks(max, min, world)) {
+        for(Block block : mapData.getEnderchests()) {
             if (block.getType() == Material.ENDER_CHEST) {
                 block.setType(Material.CHEST);
-                Chest chest = (Chest) block.getState();
-                chests.add(new GameChest(true, chest.getLocation()));
+                chests.add(new GameChest(true, block.getLocation()));
             }
         }
     }
@@ -109,7 +101,7 @@ public class ChestManager implements Listener {
                         }
                         Location location = player.getLocation();
                         player.openInventory(gameChest.getInventory());
-                        player.getWorld().playSound(location, Sound.CHEST_OPEN, 1.0F, 1.0F);
+                        player.getWorld().playSound(location, Sound.CHEST_OPEN, 0.5F, 1F);
                     }
                 }
             }
@@ -123,7 +115,7 @@ public class ChestManager implements Listener {
             for (GameChest gameChest : chests) {
                 if (gameChest.getInventory().equals(inventory)) {
                     Player player = (Player) event.getPlayer();
-                    player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 1.0F, 1.0F);
+                    player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
                 }
             }
         }

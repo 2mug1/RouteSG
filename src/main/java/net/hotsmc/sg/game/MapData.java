@@ -3,12 +3,15 @@ package net.hotsmc.sg.game;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.badlion.gspigot.FakeMultiBlockChange;
+import net.hotsmc.core.ServerInfo;
+import net.hotsmc.core.ServerType;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.utility.PositionInfo;
 import net.hotsmc.sg.utility.WorldDataUtility;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -34,6 +37,8 @@ public class MapData {
     private Location max;
     private List<Location> spawns;
     private List<Location> deathmatchSpawns;
+    private List<Block> chests;
+    private List<Block> enderchests;
 
     public MapData(String name, ConfigCursor cursor){
         this.name = name;
@@ -62,6 +67,27 @@ public class MapData {
         return locations;
     }
 
+    private List<Block> getChestBlockData(){
+        List<Block> blocks = new ArrayList<>();
+        for(String string : cursor.getStringList("ChestLocations")){
+            String[] data = string.split(":");
+            blocks.add(Bukkit.getWorld(data[0]).getBlockAt(
+                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))));
+        }
+        return blocks;
+    }
+
+    private List<Block> getEnderChestBlockData(){
+        List<Block> blocks = new ArrayList<>();
+        for(String string : cursor.getStringList("EnderchestLocations")){
+            String[] data = string.split(":");
+            blocks.add(Bukkit.getWorld(data[0]).getBlockAt(
+                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))));
+        }
+        return blocks;
+    }
+
+
     public void loadWorld(){
         WorldDataUtility.copyWorld(new File(HSG.getInstance().getDataFolder().getAbsolutePath() + "/worlds/" + name), new File(Bukkit.getServer().getWorldContainer().getAbsolutePath() + "/" + name));
         World world = Bukkit.getServer().createWorld(new WorldCreator(name));
@@ -84,6 +110,8 @@ public class MapData {
         min = cursor.getLocation("MinLocation");
         max = cursor.getLocation("MaxLocation");
         spawns = getSpawnLocations();
+        chests = getChestBlockData();
+        enderchests = getEnderChestBlockData();
         deathmatchSpawns = getDeathmatchLocations();
     }
 
@@ -96,5 +124,7 @@ public class MapData {
         max = null;
         spawns = null;
         deathmatchSpawns = null;
+        chests = null;
+        enderchests = null;
     }
 }

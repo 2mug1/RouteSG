@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
+import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.menu.SponsorMenu;
+import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import net.hotsmc.sg.utility.PlayerUtility;
@@ -24,11 +26,11 @@ public class GamePlayer {
     private PlayerData playerData;
     private boolean watching = false;
     private boolean voted = false;
-    private boolean frozen = false;
     private PlayerScoreboard scoreboard;
     private List<ItemStack> sponsorItems;
     private SponsorMenu sponsorMenu;
     private Location respawnLocation;
+    private PlayerFreezingTask playerFreezingTask;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -78,6 +80,20 @@ public class GamePlayer {
         player.setFoodLevel(20);
         player.setHealth(20D);
         PlayerUtility.clearEffects(player);
+    }
+
+    public void startFreezingTask(Location location){
+        if(playerFreezingTask != null){
+            playerFreezingTask.cancel();
+        }
+        playerFreezingTask = new PlayerFreezingTask(player, location);
+        playerFreezingTask.runTaskTimer(HSG.getInstance(), 0, 3);
+    }
+
+    public void stopFreezingTask(){
+        if(playerFreezingTask != null){
+            playerFreezingTask.cancel();
+        }
     }
 
     public void toggleSidebarMinimize() {

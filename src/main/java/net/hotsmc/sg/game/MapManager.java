@@ -6,11 +6,19 @@ import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
 import net.hotsmc.sg.game.MapData;
+import net.hotsmc.sg.utility.BlockUtility;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.PositionInfo;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
+import org.bukkit.material.EnderChest;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -215,5 +223,61 @@ public class MapManager {
         configCursor.setLocation("MaxLocation", positionInfo);
         configCursor.save();
         ChatUtility.sendMessage(player, ChatColor.GREEN + "Successfully " + mapName + " of max location has been updated to " + positionInfo.locationFormat());
+    }
+
+    /**
+     *
+     * @param mapName
+     * @param player
+     */
+    public void scanAddAllChest(String mapName, Player player){
+        if(!existsMapData(mapName)) {
+            ChatUtility.sendMessage(player, ChatColor.RED + "That name of map data not found");
+            return;
+        }
+
+        ChatUtility.sendMessage(player, ChatColor.YELLOW + "Scanning all chest and enderchest...");
+
+        File file = new File(plugin.getDataFolder().getPath() + "/maps/" + mapName + ".yml");
+        ConfigCursor configCursor = new ConfigCursor(new FileConfig(file), "mapdata");
+        Location max = configCursor.getLocation("MaxLocation");
+        Location min = configCursor.getLocation("MinLocation");
+        World world = max.getWorld();
+
+        //チェスト
+        List<Block> chests = new ArrayList<>();
+        for(Block block : BlockUtility.getChestBlocks(max, min, world)) {
+            if (block.getType() == Material.CHEST) {
+                chests.add(block);
+            }
+        }
+        List<String> list1 = new ArrayList<>();
+        for(Block chest : chests){
+            Location location = chest.getLocation();
+            BlockState state = chest.getState();
+            final BlockFace face = ((org.bukkit.material.Chest)state.getData()).getFacing();
+            list1.add(location.getWorld().getName() + ":" + location.getBlockX() + ":" + location.getBlockY() + ":" + location.getBlockZ() + ":" + face.name());
+        }
+        configCursor.set("ChestLocations", list1);
+
+        //エンダーチェスト
+        List<Block> enderchests = new ArrayList<>();
+        for(Block block : BlockUtility.getEnderChestBlocks(max, min, world)) {
+            if (block.getType() == Material.ENDER_CHEST) {
+                enderchests.add(block);
+            }
+        }
+
+        List<String> list2 = new ArrayList<>();
+        for(Block ec : enderchests){
+            Location location = ec.getLocation();
+            BlockState state = ec.getState();
+            final BlockFace face = ((org.bukkit.material.EnderChest)state.getData()).getFacing();
+            list2.add(location.getWorld().getName() + ":" + location.getBlockX() + ":" + location.getBlockY() + ":" + location.getBlockZ() + ":" + face.name());
+        }
+        configCursor.set("EnderchestLocations", list2);
+
+        configCursor.save();
+        ChatUtility.sendMessage(player, ChatColor.GREEN + "Successfully scan with add all chest!!!!ﾏﾝｼﾞｨ卍卍卍卍卍卍卍卍卍卍卍卍！！！！！！！！！！！！！！");
     }
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.task.StrikeLightningTask;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.FireworkGenerator;
@@ -13,6 +14,7 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 
@@ -188,8 +190,9 @@ public class GameTask {
         }
         for (int i = 0; i < alive.size(); i++) {
             GamePlayer gamePlayer = alive.get(i);
-            gamePlayer.teleport(getCurrentMap().getDeathmatchSpawns().get(i));
-            gamePlayer.setFrozen(true);
+            Location location = getCurrentMap().getDeathmatchSpawns().get(i);
+            gamePlayer.teleport(location);
+            gamePlayer.startFreezingTask(location);
         }
     }
 
@@ -199,10 +202,11 @@ public class GameTask {
     private void teleportToSpawn() {
         for (int i = 0; i < gamePlayers.size(); i++) {
             GamePlayer gamePlayer = gamePlayers.get(i);
-            gamePlayer.teleport(getCurrentMap().getSpawns().get(i));
-            gamePlayer.setFrozen(true);
+            Location location = getCurrentMap().getSpawns().get(i);
+            gamePlayer.teleport(location);
             gamePlayer.getPlayer().getInventory().clear();
             gamePlayer.getPlayer().updateInventory();
+            gamePlayer.startFreezingTask(location);
         }
     }
 
@@ -231,10 +235,10 @@ public class GameTask {
      *
      */
     private void onLiveGame() {
-        Bukkit.getServer().setMaxPlayers(70);
-        for (GamePlayer gamePlayer : gamePlayers) {
-            gamePlayer.setFrozen(false);
+        for(GamePlayer gamePlayer : gamePlayers){
+            gamePlayer.stopFreezingTask();
         }
+        Bukkit.getServer().setMaxPlayers(70);
         ChatUtility.broadcast(ChatColor.DARK_AQUA + "The games have begun!");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + "30" + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "minutes until deathmatch!");
         time = gameConfig.getLivegameTime();
@@ -260,10 +264,8 @@ public class GameTask {
      *
      */
     private void onDeathMatch() {
-        for (GamePlayer gamePlayer : gamePlayers) {
-            if (!gamePlayer.isWatching()) {
-                gamePlayer.setFrozen(false);
-            }
+        for(GamePlayer gamePlayer : gamePlayers){
+            gamePlayer.stopFreezingTask();
         }
         ChatUtility.broadcast(ChatColor.RED + "Fight to the death!");
         ChatUtility.broadcast("" + ChatColor.RED + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + "3" + ChatColor.DARK_GRAY + "]" + ChatColor.RED + " minutes until the deathmatch ends!");
@@ -299,7 +301,7 @@ public class GameTask {
         state = GameState.EndGame;
         ChatUtility.broadcast(ChatColor.GREEN + "The games have ended!");
         List<PlayerHealth> playerHealths = Lists.newArrayList();
-        GamePlayer winner = null;
+        GamePlayer winner;
 
         if(countAlive() == 3){
             for(GamePlayer gamePlayer : gamePlayers){
@@ -350,7 +352,7 @@ public class GameTask {
             FireworkGenerator fwg = new FireworkGenerator(HSG.getInstance());
             fwg.setLocation(getCurrentMap().getSpawns().get(i));
             fwg.setPower(2);
-            fwg.setEffect(FireworkEffect.builder().withColor(Color.RED).with(FireworkEffect.Type.BALL_LARGE).withFlicker().withTrail().withColor(Color.BLUE).withColor(Color.GREEN).build());
+            fwg.setEffect(FireworkEffect.builder().withColor(Color.AQUA).with(FireworkEffect.Type.BALL_LARGE).withFlicker().withTrail().withColor(Color.FUCHSIA).withColor(Color.WHITE).build());
             fwg.setLifeTime(20);
             fwg.spawn();
         }

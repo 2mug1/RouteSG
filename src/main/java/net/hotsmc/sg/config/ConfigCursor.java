@@ -92,7 +92,7 @@ public class ConfigCursor {
     }
 
     public void setLocation(String path, PositionInfo pos) {
-        set( path + ".world", pos.getWorldName());
+        set(path + ".world", pos.getWorldName());
         set(path + ".x", pos.getX());
         set(path + ".y", pos.getY());
         set(path + ".z", pos.getZ());
@@ -101,7 +101,7 @@ public class ConfigCursor {
     }
 
     public Location getLocation(String path) {
-        World world = Bukkit.getWorld(getString( path + ".world"));
+        World world = Bukkit.getWorld(getString(path + ".world"));
         double x = getDouble(path + ".x");
         double y = getDouble(path + ".y");
         double z = getDouble(path + ".z");

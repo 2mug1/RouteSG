@@ -151,12 +151,12 @@ public class PlayerData {
 
 
     public int calculatedPoint(){
-        return  (int) (this.point*0.08);
+        return  (int) (this.point*0.05);
     }
 
 
     public int calculatedWinAddPoint(){
-        int add = 150;
+        int add = 120;
         addPoint(add);
         return add;
     }

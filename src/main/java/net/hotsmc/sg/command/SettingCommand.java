@@ -39,6 +39,7 @@ public class SettingCommand implements CommandExecutor {
                 ChatUtility.sendMessage(player, ChatColor.YELLOW + "/hsg setdmspawn <number> <map>");
                 ChatUtility.sendMessage(player, ChatColor.YELLOW + "/hsg addtier1");
                 ChatUtility.sendMessage(player, ChatColor.YELLOW + "/hsg addtier2");
+                ChatUtility.sendMessage(player, ChatColor.YELLOW + "/hsg scanchest <map>");
                 return true;
             }
             MapManager mapManager = HSG.getMapManager();
@@ -82,6 +83,11 @@ public class SettingCommand implements CommandExecutor {
                     mapManager.updateMaxLocation(mapName, player);
                     return true;
                 }
+            }
+            if(args[0].equals("scanchest")){
+                String mapName = args[1];
+                mapManager.scanAddAllChest(mapName, player);
+                return true;
             }
             if (args.length == 3) {
                 if (args[0].equals("setspawn")) {

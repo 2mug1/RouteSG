@@ -71,8 +71,8 @@ public class PlayerListener implements Listener {
             }
             GamePlayer gamePlayer1 = gameTask.getGamePlayer(player);
             gamePlayer1.enableWatching();
-            ChatUtility.sendMessage(gamePlayer1,ChatColor.GRAY + "If you want to spectate a player, Please execute this command: " + ChatColor.YELLOW + "/spec <player>");
-            ChatUtility.sendMessage(gamePlayer1,ChatColor.GRAY + "If you want to send sponsor to a player, Please execute this command: " + ChatColor.YELLOW + "/sponsor <player>");
+            ChatUtility.sendMessage(gamePlayer1, ChatColor.WHITE + "If you want to spectate player: " + ChatColor.YELLOW + "/spec <player>");
+            ChatUtility.sendMessage(gamePlayer1, ChatColor.WHITE + "If you want to send sponsor to player: " + ChatColor.YELLOW + "/sponsor <player>");
         }
         event.setJoinMessage(null);
     }
@@ -109,7 +109,7 @@ public class PlayerListener implements Listener {
             PlayerUtility.clearEffects(player);
             location.getWorld().strikeLightningEffect(location.add(0, 5, 0));
             ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
-            if(gameTask.countAlive() == 1){
+            if (gameTask.getState() != GameState.EndGame && gameTask.countAlive() == 1) {
                 gameTask.onEndGame();
             }
         }
@@ -212,14 +212,13 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         GameTask gameTask = HSG.getGameTask();
         GamePlayer gamePlayer = gameTask.getGamePlayer(player);
-        if (player.isOnline()) {
-            event.setRespawnLocation(gamePlayer.getRespawnLocation());
-            ChatUtility.broadcast("" + ChatColor.GREEN + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countAlive() + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + " tributes remain!");
-            ChatUtility.broadcast(ChatColor.GREEN + "There are " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countWatching() + ChatColor.DARK_GRAY + "]"
-                    + ChatColor.GREEN + " spectators watching the game.");
-            ChatUtility.sendMessage(player,ChatColor.GRAY + "If you want to spectate a player, Please execute this command: " + ChatColor.YELLOW + "/spec <player>");
-            ChatUtility.sendMessage(player,ChatColor.GRAY + "If you want to send sponsor to a player, Please execute this command: " + ChatColor.YELLOW + "/sponsor <player>");
-        }
+        event.setRespawnLocation(gamePlayer.getRespawnLocation());
+        gamePlayer.enableWatching();
+        ChatUtility.broadcast("" + ChatColor.GREEN + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countAlive() + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + " tributes remain!");
+        ChatUtility.broadcast(ChatColor.GREEN + "There are " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countWatching() + ChatColor.DARK_GRAY + "]"
+                + ChatColor.GREEN + " spectators watching the game.");
+        ChatUtility.sendMessage(player, ChatColor.WHITE + "If you want to spectate player: " + ChatColor.YELLOW + "/spec <player>");
+        ChatUtility.sendMessage(player, ChatColor.WHITE + "If you want to send sponsor to player: " + ChatColor.YELLOW + "/sponsor <player>");
     }
 
     @EventHandler
@@ -237,11 +236,11 @@ public class PlayerListener implements Listener {
             deadGP.setWatching(true);
             deadGP.setRespawnLocation(dead.getLocation());
             e.setDroppedExp(0);
-
-            deadGP.respawn();
             ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            deadGP.respawn();
 
             if(gameTask.countAlive() == 1){
                 gameTask.onEndGame();
@@ -258,8 +257,9 @@ public class PlayerListener implements Listener {
             e.setDroppedExp(0);
             ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
-            deadGP.respawn();
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            deadGP.respawn();
 
             if(gameTask.countAlive() == 1){
                 gameTask.onEndGame();
@@ -284,30 +284,12 @@ public class PlayerListener implements Listener {
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             deadGP.setRespawnLocation(dead.getLocation());
             e.setDroppedExp(0);
-            deadGP.respawn();
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+
+            deadGP.respawn();
 
             if(gameTask.countAlive() == 1){
                 gameTask.onEndGame();
-            }
-        }
-    }
-
-    @EventHandler
-    public void onMove(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
-        if (gamePlayer.isFrozen()) {
-            Location from = event.getFrom();
-            double fromX = from.getX();
-            double fromZ = from.getZ();
-
-            Location to = event.getTo();
-            double toX = to.getX();
-            double toZ = to.getZ();
-
-            if (fromX != toX || fromZ != toZ) {
-                player.teleport(from);
             }
         }
     }
