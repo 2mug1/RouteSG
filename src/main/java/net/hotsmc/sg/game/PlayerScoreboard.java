@@ -29,9 +29,9 @@ public class PlayerScoreboard extends BukkitRunnable {
         this.minimize = minimize;
     }
 
-    String checkNameLength(String name) {
-        if (name.length() > 15) {
-            return name.substring(0, 15);
+    private String checkNameLength(String name) {
+        if (name.length() > 12) {
+            return name.substring(0, 12);
         }
         return name;
     }
@@ -42,6 +42,7 @@ public class PlayerScoreboard extends BukkitRunnable {
         String timeFormat = ChatColor.RED + TimeUtility.timeFormat(gameTask.getTime());
         return ChatColor.GREEN + state.name() + " " + timeFormat;
     }
+
 
     public void setup() {
         Settings settings = HSG.getSettings();
@@ -57,7 +58,7 @@ public class PlayerScoreboard extends BukkitRunnable {
             obj.getScore(ChatColor.AQUA.toString()).setScore(14);
             Team youName = scoreboard.registerNewTeam("YouName");
             youName.addEntry(ChatColor.BLACK.toString());
-            youName.setPrefix(ChatColor.WHITE + player.getName());
+            youName.setPrefix(ChatColor.WHITE + checkNameLength(player.getName()));
             obj.getScore(ChatColor.BLACK.toString()).setScore(13);
 
             Team blank1 = scoreboard.registerNewTeam("Blank1");

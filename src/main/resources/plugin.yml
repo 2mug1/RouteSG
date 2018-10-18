@@ -8,7 +8,7 @@ commands:
   sidebar:
   spec:
   stats:
-  bounty:
+  sponsor:
   list:
     aliases: [l]
   vote:

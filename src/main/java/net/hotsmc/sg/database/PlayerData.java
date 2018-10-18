@@ -1,14 +1,25 @@
 package net.hotsmc.sg.database;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.utility.MongoUtility;
+import org.apache.logging.log4j.core.appender.db.nosql.mongo.MongoDBConnection;
+import org.bson.BsonDocument;
 import org.bson.Document;
+import org.bukkit.block.DoubleChest;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 @Getter
 @Setter
@@ -140,15 +151,12 @@ public class PlayerData {
 
 
     public int calculatedPoint(){
-        return (int) (this.point*1.08) - this.point;
+        return  (int) (this.point*0.08);
     }
 
-    /**
-     * 勝ったら持ってるポイントの30％プラス
-     * @return
-     */
+
     public int calculatedWinAddPoint(){
-        int add = (int) (this.point*1.30) - this.point;
+        int add = 150;
         addPoint(add);
         return add;
     }
@@ -159,14 +167,16 @@ public class PlayerData {
     }
 
     public int getRank() {
-        int rank = 1;
+        List<WinData> all = Lists.newArrayList();
         for (Document document : getMongoConnection().getPlayers().find()) {
-            if (!document.getString("UUID").equals(uuid)) {
-                rank++;
-            }
-            return rank;
+            all.add(new WinData(document.getString("UUID"), document.getInteger("WIN")));
         }
-        return rank;
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).getUuid().equals(this.uuid)) {
+                return i + 1;
+            }
+        }
+        return 0;
     }
 
     public void updateSidebarMinimize(boolean sidebarMinimize){

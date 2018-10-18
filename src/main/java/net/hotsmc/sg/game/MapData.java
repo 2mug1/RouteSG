@@ -2,11 +2,14 @@ package net.hotsmc.sg.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.badlion.gspigot.FakeMultiBlockChange;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.utility.PositionInfo;
 import net.hotsmc.sg.utility.WorldDataUtility;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -66,6 +69,7 @@ public class MapData {
         world.setGameRuleValue("doDaylightCycle", "false");
         world.setGameRuleValue("keepInventory", "false");
         world.setGameRuleValue("doFireTick", "false");
+        world.setGameRuleValue("doMobSpawning", "false");
         world.setTime(12000L);
         world.setThundering(false);
         world.setStorm(false);
@@ -81,13 +85,6 @@ public class MapData {
         max = cursor.getLocation("MaxLocation");
         spawns = getSpawnLocations();
         deathmatchSpawns = getDeathmatchLocations();
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                this.cancel();
-            }
-        }.runTaskLater(HSG.getInstance(), 20*2);
     }
 
     public void unloadWorld(){

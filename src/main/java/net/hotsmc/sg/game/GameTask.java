@@ -24,7 +24,6 @@ public class GameTask {
     private GameState state;
     private VoteManager voteManager;
     private ChestManager chestManager;
-    private BountyManager bountyManager;
     private int time;
     private MapData currentMap = null;
     private List<GamePlayer> gamePlayers;
@@ -40,7 +39,6 @@ public class GameTask {
         gamePlayers = Lists.newArrayList();
         voteManager = new VoteManager();
         chestManager = new ChestManager();
-        bountyManager = new BountyManager();
         chestManager.loadTierItems();
     }
 
@@ -80,7 +78,7 @@ public class GameTask {
                 return;
             }
 
-            if (state == GameState.PreDeathMatch) {
+            if (state == GameState.PreDeathmatch) {
                 onDeathMatch();
                 return;
             }
@@ -109,7 +107,7 @@ public class GameTask {
             tickLiveGame();
         }
 
-        if (state == GameState.PreDeathMatch) {
+        if (state == GameState.PreDeathmatch) {
             tickPreDeathMatch();
         }
 
@@ -220,11 +218,11 @@ public class GameTask {
         currentMap = voteManager.getDecidedMapData();
         ChatUtility.broadcast(ChatColor.YELLOW + "Loading " + currentMap.getName() + "...");
         currentMap.loadWorld();
+        chestManager.loadAllChest(currentMap);
         teleportToSpawn();
         ChatUtility.broadcast(ChatColor.YELLOW + "Map name" + ChatColor.DARK_GRAY + ": " + ChatColor.DARK_GREEN + currentMap.getName());
         ChatUtility.broadcast(ChatColor.DARK_RED + "Please wait " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "seconds before the games begin.");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until the games begin!");
-        chestManager.loadAllMapTier2Chest(currentMap);
         time = gameConfig.getPregameTime();
         state = GameState.PreGame;
     }
@@ -233,12 +231,12 @@ public class GameTask {
      *
      */
     private void onLiveGame() {
+        Bukkit.getServer().setMaxPlayers(70);
         for (GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.setFrozen(false);
         }
         ChatUtility.broadcast(ChatColor.DARK_AQUA + "The games have begun!");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + "30" + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "minutes until deathmatch!");
-        Bukkit.getServer().setMaxPlayers(100);
         time = gameConfig.getLivegameTime();
         state = GameState.LiveGame;
     }
@@ -255,7 +253,7 @@ public class GameTask {
         }
         ChatUtility.broadcast(ChatColor.DARK_RED + "Please allow " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + gameConfig.getPredeathmatchTime() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_RED + " seconds for all players to load the map.");
         time = gameConfig.getPredeathmatchTime();
-        state = GameState.PreDeathMatch;
+        state = GameState.PreDeathmatch;
     }
 
     /**
@@ -300,7 +298,6 @@ public class GameTask {
         time = gameConfig.getEndgameTime();
         state = GameState.EndGame;
         ChatUtility.broadcast(ChatColor.GREEN + "The games have ended!");
-        Bukkit.getServer().setMaxPlayers(24);
         List<PlayerHealth> playerHealths = Lists.newArrayList();
         GamePlayer winner = null;
 
@@ -345,24 +342,6 @@ public class GameTask {
             ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
                     + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
         }
-
-        //Bountyされていたら
-        if(bountyManager.wasBountiedMe(winner)) {
-            List<BountyData> bountyData = bountyManager.getBounties(winner);
-            for (BountyData bountyData1 : bountyData) {
-                GamePlayer sender = bountyData1.getSender();
-                if (sender.getPlayer().isOnline()) {
-                    int points = bountyData1.getPoints();
-
-                    int addPoints = (int) (points * 1.70) - points;
-
-                    //優勝したら賭けたプレイヤーに賭けたポイント分の70%あげる
-                    bountyData1.getSender().getPlayerData().addPoint(addPoints);
-
-                    ChatUtility.sendMessage(sender, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + points + ChatColor.DARK_GRAY + "]" + ChatColor.DARK_AQUA + " points for won the game " + HotsCore.getHotsPlayer(winner.getPlayer()).getColorName());
-                }
-            }
-        }
         
         Bukkit.getWorld(getCurrentMap().getName()).setTime(18000);
 
@@ -386,17 +365,15 @@ public class GameTask {
             gamePlayer.teleport(gameConfig.getLobbyLocation());
             gamePlayer.resetPlayer();
         }
-        chestManager.getOpenedChestLocations().clear();
-        chestManager.getTier2ChestLocations().clear();
-        currentMap.unloadWorld();
-        voteManager.selectRandomVoteMaps();
-        voteManager.setVoting(true);
         //Hubに転送
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
             ChatUtility.sendMessage(player, ChatColor.GRAY + "Connecting to " + ChatColor.GREEN + "Hub");
             HSG.getInstance().getBungeeChannelApi().connect(player, "hub");
         }
-        bountyManager.clearBountyData();
+        voteManager.selectRandomVoteMaps();
+        voteManager.setVoting(true);
+        currentMap.unloadWorld();
+        Bukkit.getServer().setMaxPlayers(24);
         time = gameConfig.getLobbyTime();
         state = GameState.Lobby;
     }
@@ -464,18 +441,12 @@ public class GameTask {
                 }.runTaskLater(HSG.getInstance(), 1);
             }
         }
-        if(countAlive() == 1){
-            onEndGame();
-        }
     }
 
     /**
      *
      */
     private void tickLiveGame(){
-        if(countAlive() == 1){
-            onEndGame();
-        }
         if (countAlive() <= 3 && time > 60) {
             time = 60;
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until teleport to deathmatch.");
@@ -484,7 +455,7 @@ public class GameTask {
         //Chest Refill
         //17分
         if (time == 1020) {
-            chestManager.getOpenedChestLocations().clear();
+            chestManager.refillChest();
             ChatUtility.broadcast(ChatColor.AQUA + "All of the chest have refilled!");
             for(Player player : Bukkit.getServer().getOnlinePlayers()){
                 player.playSound(player.getLocation(), Sound.CHEST_OPEN, 1, 1);
@@ -492,7 +463,7 @@ public class GameTask {
             return;
         }
         if (time == 420) {
-            chestManager.getOpenedChestLocations().clear();
+            chestManager.refillChest();
             ChatUtility.broadcast(ChatColor.AQUA + "All of the chest have refilled");
             for(Player player : Bukkit.getServer().getOnlinePlayers()){
                 player.playSound(player.getLocation(), Sound.CHEST_OPEN, 1, 1);
@@ -504,18 +475,12 @@ public class GameTask {
      *
      */
     private void tickPreDeathMatch(){
-        if(countAlive() == 1){
-            onEndGame();
-        }
     }
 
     /**
      *
      */
     private void tickDeathMatch(){
-        if(countAlive() == 1){
-            onEndGame();
-        }
     }
 
     /**
@@ -534,7 +499,7 @@ public class GameTask {
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until teleport to deathmatch.");
             return;
         }
-        if (state == GameState.PreDeathMatch) {
+        if (state == GameState.PreDeathmatch) {
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until the deathmatch begin.");
             return;
         }

@@ -4,7 +4,7 @@ public enum GameState {
     Lobby,
     PreGame,
     LiveGame,
-    PreDeathMatch,
+    PreDeathmatch,
     DeathMatch,
     EndGame
 }

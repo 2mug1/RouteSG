@@ -39,13 +39,10 @@ public class HSG extends JavaPlugin {
     @Getter
     private BungeeChannelApi bungeeChannelApi;
 
-    private HotsCore hotsCore;
-
     @Override
     public void onEnable() {
         instance = this;
         bungeeChannelApi = BungeeChannelApi.of(this);
-        hotsCore = HotsCore.getInstance();
         settings = new Settings(new ConfigCursor(new FileConfig(this, "Settings.yml"), "settings"));
         mapManager = new MapManager(this);
         mapManager.load();
@@ -72,7 +69,7 @@ public class HSG extends JavaPlugin {
         this.getCommand("spec").setExecutor(new SpectateCommand());
         this.getCommand("stats").setExecutor(new StatsCommand());
         this.getCommand("list").setExecutor(new ListCommand());
-        this.getCommand("bounty").setExecutor(new BountyCommand());
+        this.getCommand("sponsor").setExecutor(new SponsorCommand());
     }
 
     public static List<Player> getOnlinePlayers() {

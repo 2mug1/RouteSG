@@ -2,6 +2,7 @@ package net.hotsmc.sg.command;
 
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.game.GameState;
 import net.hotsmc.sg.utility.ChatUtility;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,20 +11,22 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class SpectateCommand implements CommandExecutor {
-
+public class SponsorCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
         if(commandSender instanceof Player){
             Player player = (Player) commandSender;
-            GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
-            if(gamePlayer == null)return true;
-            if(!gamePlayer.isWatching()){
-                ChatUtility.sendMessage(player,  ChatColor.RED + "You are not spectating.");
-                return true;
-            }
-            if(args.length == 1) {
+            if(args.length == 1){
+                if(HSG.getGameTask().getState() == GameState.Lobby || HSG.getGameTask().getState() == GameState.PreDeathmatch ||
+                        HSG.getGameTask().getState() == GameState.DeathMatch || HSG.getGameTask().getState() == GameState.EndGame){
+                    ChatUtility.sendMessage(player, ChatColor.RED + "You can't send sponsor items at this time.");
+                    return true;
+                }
                 String targetName = args[0];
+                if(targetName.equals(player.getName())){
+                    ChatUtility.sendMessage(player, ChatColor.RED + "You can't send sponsor item yourself.");
+                    return true;
+                }
                 Player target = Bukkit.getPlayer(targetName);
                 if(target == null)return true;
                 if(!target.isOnline()){
@@ -34,13 +37,17 @@ public class SpectateCommand implements CommandExecutor {
                 if(targetGP == null)return true;
                 if(targetGP.isWatching()){
                     ChatUtility.sendMessage(player, ChatColor.RED + targetName + " isn't playing the game.");
-                }else{
-                    player.teleport(target);
-                    ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + ChatColor.GREEN + targetName);
+                    return true;
                 }
-                return true;
+                GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
+                if(gamePlayer == null)return true;
+                if(!gamePlayer.isWatching()){
+                    ChatUtility.sendMessage(player, ChatColor.RED + "You aren't spectator.");
+                    return true;
+                }
+                targetGP.openSponsorMenu(player);
             }else{
-                ChatUtility.sendMessage(player, ChatColor.RED + "/spec <player>");
+                ChatUtility.sendMessage(player, ChatColor.RED + "/sponsor <player>");
             }
         }
         return true;
