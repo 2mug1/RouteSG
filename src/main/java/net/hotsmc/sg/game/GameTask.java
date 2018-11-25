@@ -5,11 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.reflection.BukkitReflection;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.task.StrikeLightningTask;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.FireworkGenerator;
 import net.hotsmc.sg.utility.ServerUtility;
+import net.hotsmc.sg.utility.TimeUtility;
+import net.minecraft.server.v1_7_R4.ChatTypeAdapterFactory;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -31,7 +34,7 @@ public class GameTask {
     private List<GamePlayer> gamePlayers;
     private boolean timerFlag = false;
 
-    private int circleSize = 57;
+    private int circleSize = 63;
 
 
     public GameTask(GameConfig gameConfig) {
@@ -56,8 +59,7 @@ public class GameTask {
     /**
      * 一秒毎
      */
-    public void tick() {
-        ServerUtility.setMotd(state.name());
+    private void tick() {
 
         //タイマー進行
         if (time >= 0 && timerFlag) {
@@ -115,6 +117,10 @@ public class GameTask {
 
         if (state == GameState.DeathMatch) {
             tickDeathMatch();
+        }
+
+        if(state == GameState.EndGame){
+            tickEndGame();
         }
 
         //１０秒と残り5秒毎で呼び出される
@@ -217,7 +223,6 @@ public class GameTask {
         voteManager.setVoting(false);
         for (GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.setVoted(false);
-            gamePlayer.getPlayerData().updatePlayed(1);
         }
         currentMap = voteManager.getDecidedMapData();
         ChatUtility.broadcast(ChatColor.YELLOW + "Loading " + currentMap.getName() + "...");
@@ -227,6 +232,7 @@ public class GameTask {
         ChatUtility.broadcast(ChatColor.YELLOW + "Map name" + ChatColor.DARK_GRAY + ": " + ChatColor.DARK_GREEN + currentMap.getName());
         ChatUtility.broadcast(ChatColor.DARK_RED + "Please wait " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "seconds before the games begin.");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until the games begin!");
+        ChatUtility.broadcast("" + ChatColor.YELLOW + ChatColor.BOLD + "WARNING " + ChatColor.RED + "Team is up to 4 people. / チームは4人まで");
         time = gameConfig.getPregameTime();
         state = GameState.PreGame;
     }
@@ -237,8 +243,9 @@ public class GameTask {
     private void onLiveGame() {
         for(GamePlayer gamePlayer : gamePlayers){
             gamePlayer.stopFreezingTask();
+            gamePlayer.getPlayerData().updatePlayed(1);
         }
-        Bukkit.getServer().setMaxPlayers(70);
+        BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 40);
         ChatUtility.broadcast(ChatColor.DARK_AQUA + "The games have begun!");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + "30" + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "minutes until deathmatch!");
         time = gameConfig.getLivegameTime();
@@ -351,9 +358,9 @@ public class GameTask {
         for (int i = 0; i < getCurrentMap().getSpawns().size(); i++) {
             FireworkGenerator fwg = new FireworkGenerator(HSG.getInstance());
             fwg.setLocation(getCurrentMap().getSpawns().get(i));
-            fwg.setPower(2);
-            fwg.setEffect(FireworkEffect.builder().withColor(Color.AQUA).with(FireworkEffect.Type.BALL_LARGE).withFlicker().withTrail().withColor(Color.FUCHSIA).withColor(Color.WHITE).build());
-            fwg.setLifeTime(20);
+            fwg.setPower(1);
+            fwg.setEffect(FireworkEffect.builder().withColor(Color.AQUA).with(FireworkEffect.Type.BALL).withFlicker().withTrail().withColor(Color.FUCHSIA).withColor(Color.WHITE).build());
+            fwg.setLifeTime(90);
             fwg.spawn();
         }
     }
@@ -375,7 +382,7 @@ public class GameTask {
         voteManager.selectRandomVoteMaps();
         voteManager.setVoting(true);
         currentMap.unloadWorld();
-        Bukkit.getServer().setMaxPlayers(24);
+        BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 24);
         time = gameConfig.getLobbyTime();
         state = GameState.Lobby;
     }
@@ -400,6 +407,9 @@ public class GameTask {
                 voteManager.broadcast();
                 setTimerFlag(true);
                 voteManager.setVoting(true);
+                for(GamePlayer gamePlayer:gamePlayers){
+                    gamePlayer.setVoted(false);
+                }
             }
         }
         if (time == 45) {
@@ -417,6 +427,7 @@ public class GameTask {
         if (time == 6) {
             voteManager.broadcast();
         }
+        ServerUtility.setMotd("0," + time);
     }
 
     /**
@@ -443,6 +454,7 @@ public class GameTask {
                 }.runTaskLater(HSG.getInstance(), 1);
             }
         }
+        ServerUtility.setMotd("1," + time);
     }
 
     /**
@@ -462,7 +474,6 @@ public class GameTask {
             for(Player player : Bukkit.getServer().getOnlinePlayers()){
                 player.playSound(player.getLocation(), Sound.CHEST_OPEN, 1, 1);
             }
-            return;
         }
         if (time == 420) {
             chestManager.refillChest();
@@ -471,18 +482,25 @@ public class GameTask {
                 player.playSound(player.getLocation(), Sound.CHEST_OPEN, 1, 1);
             }
         }
+        ServerUtility.setMotd("2," + time);
     }
 
     /**
      *
      */
     private void tickPreDeathMatch(){
+        ServerUtility.setMotd("3," + time);
     }
 
     /**
      *
      */
     private void tickDeathMatch(){
+        ServerUtility.setMotd("4," + time);
+    }
+
+    private void tickEndGame(){
+        ServerUtility.setMotd("5," + time);
     }
 
     /**

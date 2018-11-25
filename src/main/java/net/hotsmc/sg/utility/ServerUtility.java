@@ -2,11 +2,13 @@ package net.hotsmc.sg.utility;
 
 import net.minecraft.server.v1_7_R4.MinecraftServer;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_7_R4.CraftServer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 public class ServerUtility {
+
 
     public static void setMotd(String motd) {
         String bukkitversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);

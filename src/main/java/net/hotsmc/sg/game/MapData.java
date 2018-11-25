@@ -27,10 +27,9 @@ import java.util.List;
 @Getter
 public class MapData {
 
-    private String name;
-
     private ConfigCursor cursor;
 
+    private String name;
     private Location defaultSpawn;
     private Location centerLocation;
     private Location min;

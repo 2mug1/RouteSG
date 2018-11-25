@@ -13,3 +13,4 @@ commands:
     aliases: [l]
   vote:
     aliases: [v]
+  gf:

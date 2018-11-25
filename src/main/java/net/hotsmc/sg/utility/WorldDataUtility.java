@@ -18,7 +18,7 @@ public class WorldDataUtility {
 
     public static void deleteWorld(File path) {
         try {
-            FileUtils.deleteDirectory(path);
+            FileUtils.forceDelete(path);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,20 @@ public class ItemUtility {
         return is;
     }
 
+    public static ItemStack createPlayerSkull(String playerName, String displayName, String... lore){
+        ItemStack myAwesomeSkull = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        SkullMeta myAwesomeSkullMeta = (SkullMeta) myAwesomeSkull.getItemMeta();
+        myAwesomeSkullMeta.setOwner(playerName);
+        myAwesomeSkull.setItemMeta(myAwesomeSkullMeta);
+        ItemMeta meta = myAwesomeSkull.getItemMeta();
+        meta.setDisplayName(displayName);
+        if (lore != null) {
+            meta.setLore(Arrays.asList(lore));
+        }
+        myAwesomeSkull.setItemMeta(meta);
+        return myAwesomeSkull;
+    }
+
     public static ItemStack createFlintAndSteel(){
         ItemStack is = new ItemStack(Material.FLINT_AND_STEEL);
         is.setDurability((short)61);
@@ -53,7 +68,6 @@ public class ItemUtility {
         items.add(new ItemStack(Material.IRON_INGOT));
         items.add(new ItemStack(Material.ARROW, 5));
         items.add(new ItemStack(Material.EXP_BOTTLE, 2));
-        items.add(new ItemStack(Material.CAKE));
         items.add(new ItemStack(Material.PORK));
         items.add(new ItemStack(Material.BOW));
         items.add(new ItemStack(ItemUtility.createFlintAndSteel()));

@@ -1,33 +1,44 @@
 package net.hotsmc.sg.listener.listeners;
 
 import net.hotsmc.core.HotsCore;
-import net.hotsmc.sg.database.PlayerData;
+import net.hotsmc.core.ServerType;
+import net.hotsmc.core.gui.ClickActionItem;
+import net.hotsmc.sg.database.data.PlayerData;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.utility.ChatUtility;
+import net.hotsmc.sg.utility.ChestPacketUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import net.hotsmc.sg.utility.PlayerUtility;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockIgniteEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
 public class PlayerListener implements Listener {
+
+    @EventHandler
+    public void onLogin(AsyncPlayerPreLoginEvent event) {
+        if (HSG.getGameTask().getState() == GameState.PreGame) {
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, ChatColor.RED + HSG.getSettings().getServerName() + " is preparing the game");
+            return;
+        }
+        if (HSG.getGameTask().getState() == GameState.EndGame) {
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, ChatColor.RED + HSG.getSettings().getServerName() + " is ending the game");
+        }
+    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
@@ -35,6 +46,8 @@ public class PlayerListener implements Listener {
         player.setHealth(20.0);
         player.setFoodLevel(20);
         player.getInventory().clear();
+        player.setExp(0F);
+        player.setLevel(0);
         PlayerUtility.clearEffects(player);
         EntityEquipment equipment = player.getEquipment();
         equipment.setHelmet(null);
@@ -71,6 +84,7 @@ public class PlayerListener implements Listener {
             }
             GamePlayer gamePlayer1 = gameTask.getGamePlayer(player);
             gamePlayer1.enableWatching();
+            gamePlayer1.setSpectateItem();
             ChatUtility.sendMessage(gamePlayer1, ChatColor.WHITE + "If you want to spectate player: " + ChatColor.YELLOW + "/spec <player>");
             ChatUtility.sendMessage(gamePlayer1, ChatColor.WHITE + "If you want to send sponsor to player: " + ChatColor.YELLOW + "/sponsor <player>");
         }
@@ -86,31 +100,50 @@ public class PlayerListener implements Listener {
         if (gamePlayer == null) return;
         if (gamePlayer.isWatching()) {
             PlayerUtility.clearEffects(player);
-            gamePlayer.disableWatching();
         }
         //生きているプレイヤーだったら
-        if (!gamePlayer.isWatching() && state != GameState.Lobby) {
-            gamePlayer.setWatching(true);
-            World world = Bukkit.getWorld(HSG.getGameTask().getCurrentMap().getDefaultSpawn().getWorld().getName());
-            Location location = player.getLocation();
-            for (ItemStack itemStack : player.getInventory().getContents()) {
-                if (itemStack != null && itemStack.getType() != Material.AIR) {
-                    world.dropItemNaturally(location, itemStack);
-                }
+        if (!gamePlayer.isWatching()) {
+            if(state == GameState.PreGame){
+                Location location = player.getLocation();
+                location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             }
-            for (ItemStack itemStack : player.getInventory().getArmorContents()) {
-                if (itemStack != null && itemStack.getType() != Material.AIR) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
+            if (state == GameState.LiveGame || state == GameState.PreDeathmatch || state == GameState.DeathMatch) {
+                gamePlayer.setWatching(true);
+                World world = Bukkit.getWorld(HSG.getGameTask().getCurrentMap().getDefaultSpawn().getWorld().getName());
+                Location location = player.getLocation();
+                //チェストを開けていたら
+                if (gamePlayer.getOpeningChest() != null) {
+                    ChestPacketUtility.closeChestPacket(gamePlayer.getOpeningChest().getLocation());
+                    gamePlayer.setOpeningChest(null);
+                    player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
                 }
-            }
-            ChatUtility.sendMessage(gamePlayer, ChatColor.DARK_AQUA + "You've lost "
-                    + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + gamePlayer.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
-            gamePlayer.getPlayerData().withdrawPoint(gamePlayer.getPlayerData().calculatedPoint());
-            PlayerUtility.clearEffects(player);
-            location.getWorld().strikeLightningEffect(location.add(0, 5, 0));
-            ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
-            if (gameTask.getState() != GameState.EndGame && gameTask.countAlive() == 1) {
-                gameTask.onEndGame();
+                for (ItemStack itemStack : player.getInventory().getContents()) {
+                    if (itemStack != null && itemStack.getType() != Material.AIR) {
+                        world.dropItemNaturally(location, itemStack);
+                    }
+                }
+                //アイテム全部落とす
+                for (ItemStack itemStack : player.getInventory().getArmorContents()) {
+                    if (itemStack != null && itemStack.getType() != Material.AIR) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
+                    }
+                }
+                ChatUtility.sendMessage(gamePlayer, ChatColor.DARK_AQUA + "You've lost "
+                        + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + gamePlayer.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
+                gamePlayer.getPlayerData().withdrawPoint(gamePlayer.getPlayerData().calculatedPoint());
+                PlayerUtility.clearEffects(player);
+                location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
+                ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
+                if (gameTask.getState() != GameState.EndGame && gameTask.countAlive() <= 1) {
+                    gameTask.onEndGame();
+                }
+                if (gameTask.countAlive() <= 3) {
+                    for (GamePlayer gamePlayer1 : gameTask.getGamePlayers()) {
+                        if (!gamePlayer1.isWatching()) {
+                            gamePlayer1.getPlayerData().updateTop3(1);
+                        }
+                    }
+                }
             }
         }
         HSG.getGameTask().removeGamePlayer(gamePlayer);
@@ -214,6 +247,7 @@ public class PlayerListener implements Listener {
         GamePlayer gamePlayer = gameTask.getGamePlayer(player);
         event.setRespawnLocation(gamePlayer.getRespawnLocation());
         gamePlayer.enableWatching();
+        gamePlayer.setSpectateItem();
         ChatUtility.broadcast("" + ChatColor.GREEN + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countAlive() + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + " tributes remain!");
         ChatUtility.broadcast(ChatColor.GREEN + "There are " + ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + gameTask.countWatching() + ChatColor.DARK_GRAY + "]"
                 + ChatColor.GREEN + " spectators watching the game.");
@@ -231,7 +265,7 @@ public class PlayerListener implements Listener {
         //自滅の場合①
         if (killer == null) {
             Location location = dead.getLocation();
-            location.getWorld().strikeLightningEffect(location.add(0, 5, 0));
+            location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             deadGP.setWatching(true);
             deadGP.setRespawnLocation(dead.getLocation());
@@ -242,31 +276,60 @@ public class PlayerListener implements Listener {
 
             deadGP.respawn();
 
-            if(gameTask.countAlive() == 1){
+            if (gameTask.countAlive() <= 1) {
                 gameTask.onEndGame();
             }
+
+            if (gameTask.countAlive() <= 3) {
+                for (GamePlayer gamePlayer : gameTask.getGamePlayers()) {
+                    if (!gamePlayer.isWatching()) {
+                        gamePlayer.getPlayerData().
+                                updateTop3(1);
+                    }
+                }
+            }
+
+            if (deadGP.getOpeningChest() != null) {
+                ChestPacketUtility.closeChestPacket(deadGP.getOpeningChest().getLocation());
+                deadGP.setOpeningChest(null);
+                dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
+            }
+
             return;
         }
         //自滅の場合②
         if (killer.equals(dead)) {
             Location location = dead.getLocation();
-            location.getWorld().strikeLightningEffect(location.add(0, 5, 0));
+            location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             deadGP.setWatching(true);
             deadGP.setRespawnLocation(dead.getLocation());
             e.setDroppedExp(0);
-            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for dying");
+            ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
 
             deadGP.respawn();
 
-            if(gameTask.countAlive() == 1){
+            if (gameTask.countAlive() <= 1) {
                 gameTask.onEndGame();
+            }
+            if (gameTask.countAlive() <= 3) {
+                for (GamePlayer gamePlayer : gameTask.getGamePlayers()) {
+                    if (!gamePlayer.isWatching()) {
+                        gamePlayer.getPlayerData().updateTop3(1);
+                    }
+                }
+            }
+
+            if (deadGP.getOpeningChest() != null) {
+                ChestPacketUtility.closeChestPacket(deadGP.getOpeningChest().getLocation());
+                deadGP.setOpeningChest(null);
+                dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
         } else {
             Location location = dead.getLocation();
-            location.getWorld().strikeLightningEffect(location.add(0, 5, 0));
+            location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             deadGP.setWatching(true);
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
@@ -288,8 +351,22 @@ public class PlayerListener implements Listener {
 
             deadGP.respawn();
 
-            if(gameTask.countAlive() == 1){
+            if (gameTask.countAlive() <= 1) {
                 gameTask.onEndGame();
+            }
+
+            if (gameTask.countAlive() <= 3) {
+                for (GamePlayer gamePlayer : gameTask.getGamePlayers()) {
+                    if (!gamePlayer.isWatching()) {
+                        gamePlayer.getPlayerData().updateTop3(1);
+                    }
+                }
+            }
+
+            if (deadGP.getOpeningChest() != null) {
+                ChestPacketUtility.closeChestPacket(deadGP.getOpeningChest().getLocation());
+                deadGP.setOpeningChest(null);
+                dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
         }
     }
@@ -332,7 +409,7 @@ public class PlayerListener implements Listener {
             Block block = event.getBlock();
             Material type = block.getType();
             if (type == Material.LONG_GRASS || type == Material.LEAVES || type == Material.LEAVES_2 || type == Material.HUGE_MUSHROOM_1 || type == Material.HUGE_MUSHROOM_2 || type == Material.VINE ||
-                    type == Material.DEAD_BUSH || type == Material.YELLOW_FLOWER || type == Material.RED_ROSE) {
+                    type == Material.DEAD_BUSH || type == Material.YELLOW_FLOWER || type == Material.RED_ROSE || type == Material.CAKE) {
                 return;
             }
         }
@@ -359,8 +436,8 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEnter(VehicleEnterEvent event){
-        if(event.getEntered() instanceof Player){
+    public void onEnter(VehicleEnterEvent event) {
+        if (event.getEntered() instanceof Player) {
             Player player = (Player) event.getEntered();
             GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
             if (gamePlayer == null) return;
@@ -371,24 +448,51 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onIgnite(BlockIgniteEvent event){
-        if(event.getCause() == BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL){
+    public void onExplosion(ExplosionPrimeEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onIgnite(BlockIgniteEvent event) {
+        if (event.getCause() == BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL) {
             Player player = event.getPlayer();
             ItemStack itemStack = player.getItemInHand();
-            if(itemStack.getType() == Material.AIR)return;
-            if(itemStack.getType() == Material.FLINT_AND_STEEL){
-                if(itemStack.getDurability() < 61){
-                    itemStack.setDurability((short)61);
+            if (itemStack.getType() == Material.AIR) return;
+            if (itemStack.getType() == Material.FLINT_AND_STEEL) {
+                if (itemStack.getDurability() < 61) {
+                    itemStack.setDurability((short) 61);
                 }
             }
         }
     }
 
     @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event){
+    public void onBlockDamage(BlockDamageEvent event) {
+        Player player = event.getPlayer();
+        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
+        if (gamePlayer == null) return;
+        if (gamePlayer.isWatching())
+            if (event.getBlock().getType() == Material.FIRE) {
+                event.setCancelled(true);
+            }
+    }
+
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
         Location location = event.getTo();
-        CraftWorld cw = (CraftWorld)location.getWorld();
+        CraftWorld cw = (CraftWorld) location.getWorld();
         cw.loadChunk(location.getBlockX(), location.getBlockZ());
         cw.refreshChunk(location.getBlockX(), location.getBlockZ());
+    }
+
+    @EventHandler
+    public void onVehicleEntityCollision(VehicleEntityCollisionEvent event) {
+        if (event.getEntity() instanceof Player) {
+            GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer((Player) event.getEntity());
+            if (gamePlayer == null) return;
+            if (gamePlayer.isWatching()) {
+                event.setCancelled(true);
+            }
+        }
     }
 }

@@ -9,6 +9,6 @@ public class HealthComparator implements Comparator<PlayerHealth> {
 
     @Override
     public int compare(PlayerHealth o1, PlayerHealth o2) {
-        return o1.getHealth() > o1.getHealth() ? -1 : 1;
+        return o1.getHealth() > o2.getHealth() ? -1 : 1;
     }
 }

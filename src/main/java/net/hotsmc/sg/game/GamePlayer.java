@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.database.PlayerData;
+import net.hotsmc.sg.database.data.PlayerData;
 import net.hotsmc.sg.menu.SponsorMenu;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.utility.ChatUtility;
@@ -31,6 +31,7 @@ public class GamePlayer {
     private SponsorMenu sponsorMenu;
     private Location respawnLocation;
     private PlayerFreezingTask playerFreezingTask;
+    private GameChest openingChest;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -139,35 +140,29 @@ public class GamePlayer {
             ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Exp bottle of 2" + ChatColor.WHITE + "!");
             sponsorItems.get(3).setType(Material.AIR);
         }
-        if(type == Material.CAKE){
-            addItem(new ItemStack(Material.CAKE));
-            from.getPlayerData().withdrawPoint(getCost(Material.CAKE));
-            ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Cake" + ChatColor.WHITE + "!");
-            sponsorItems.get(4).setType(Material.AIR);
-        }
         if(type == Material.PORK){
             addItem(new ItemStack(Material.PORK));
             from.getPlayerData().withdrawPoint(getCost(Material.PORK));
             ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Pork" + ChatColor.WHITE + "!");
-            sponsorItems.get(5).setType(Material.AIR);
+            sponsorItems.get(4).setType(Material.AIR);
         }
         if(type == Material.BOW){
             addItem(new ItemStack(Material.BOW));
             from.getPlayerData().withdrawPoint(getCost(Material.BOW));
             ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Bow" + ChatColor.WHITE + "!");
-            sponsorItems.get(6).setType(Material.AIR);
+            sponsorItems.get(5).setType(Material.AIR);
         }
         if(type == Material.FLINT_AND_STEEL){
             addItem(ItemUtility.createFlintAndSteel());
             from.getPlayerData().withdrawPoint(getCost(Material.FLINT_AND_STEEL));
             ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Flint and steel" + ChatColor.WHITE + "!");
-            sponsorItems.get(7).setType(Material.AIR);
+            sponsorItems.get(6).setType(Material.AIR);
         }
         if(type == Material.MUSHROOM_SOUP){
             addItem(new ItemStack(Material.MUSHROOM_SOUP));
             from.getPlayerData().withdrawPoint(getCost(Material.MUSHROOM_SOUP));
             ChatUtility.sendMessage(player, ChatColor.WHITE + "Sponsor item sent from " + HotsCore.getHotsPlayer(from.getPlayer()).getColorName() + ChatColor.WHITE + " for " + ChatColor.YELLOW + "Mushroom soup" + ChatColor.WHITE + "!");
-            sponsorItems.get(8).setType(Material.AIR);
+            sponsorItems.get(7).setType(Material.AIR);
         }
         player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 1);
         ChatUtility.sendMessage(from,  ChatColor.WHITE + "Sponsor item sent.");
@@ -198,9 +193,6 @@ public class GamePlayer {
         if(type == Material.EXP_BOTTLE){
             return 70;
         }
-        if(type == Material.CAKE){
-            return 65;
-        }
         if(type == Material.PORK){
             return 30;
         }
@@ -214,5 +206,27 @@ public class GamePlayer {
             return 65;
         }
         return 0;
+    }
+
+    public void setSpectateItem(){
+        player.getInventory().clear();
+        player.getInventory().setItem(4, HSG.getClickActionItems().get(0).getItemStack());
+        player.updateInventory();
+    }
+
+    public boolean isOnline(){
+        return player.isOnline();
+    }
+
+    public void hidePlayer(GamePlayer other) {
+        if (isOnline()) {
+            player.hidePlayer(other.getPlayer());
+        }
+    }
+
+    public void showPlayer(GamePlayer other) {
+        if (isOnline()) {
+            player.showPlayer(other.getPlayer());
+        }
     }
 }

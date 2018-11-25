@@ -34,7 +34,7 @@ public class SponsorMenu extends Menu {
     @Override
     public Map<Integer, Button> getButtons(Player player) {
         HashMap<Integer, Button> buttons = new HashMap<>();
-        for(int i = 0; i < 9; i++) {
+        for(int i = 0; i < 8; i++) {
             if (gamePlayer.getSponsorItems().get(i).getType() != Material.AIR) {
                 ItemStack itemStack = gamePlayer.getSponsorItems().get(i);
                 Material type = itemStack.getType();
@@ -71,9 +71,6 @@ public class SponsorMenu extends Menu {
         }
         if(type == Material.EXP_BOTTLE){
             return 70;
-        }
-        if(type == Material.CAKE){
-            return 65;
         }
         if(type == Material.PORK){
             return 30;

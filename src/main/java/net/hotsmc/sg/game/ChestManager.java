@@ -3,17 +3,20 @@ package net.hotsmc.sg.game;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Getter;
+import net.hotsmc.core.gui.ClickActionItem;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
 import net.hotsmc.sg.utility.BlockUtility;
 import net.hotsmc.sg.utility.ChatUtility;
-import net.minecraft.server.v1_7_R4.PacketPlayOutBlockAction;
-import net.minecraft.server.v1_7_R4.TileEntityChest;
-import net.minecraft.server.v1_7_R4.WorldServer;
+import net.hotsmc.sg.utility.ChestPacketUtility;
+import net.minecraft.server.v1_7_R4.*;
 import org.bukkit.*;
+import org.bukkit.Material;
 import org.bukkit.block.*;
+import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_7_R4.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,6 +29,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.EnderChest;
+import org.bukkit.material.MaterialData;
 
 import java.util.List;
 import java.util.Map;
@@ -35,16 +39,20 @@ import java.util.Random;
 public class ChestManager implements Listener {
 
     private int maxItemSlot;
+
     private List<ItemStack> tier1Items;
     private List<ItemStack> tier2Items;
 
     private List<GameChest> chests;
+
+    private Random r;
 
     public ChestManager() {
         maxItemSlot = new ConfigCursor(new FileConfig(HSG.getInstance(), "ChestConfig.yml"), "ChestConfig").getInt("MaxItemSlot");
         tier1Items = Lists.newArrayList();
         tier2Items = Lists.newArrayList();
         chests = Lists.newArrayList();
+        r = new Random();
         Bukkit.getPluginManager().registerEvents(this, HSG.getInstance());
     }
 
@@ -79,18 +87,27 @@ public class ChestManager implements Listener {
         GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
         if (gamePlayer == null) return;
         if (gamePlayer.isWatching()) {
-            if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR ||
-                    event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
-                event.setCancelled(true);
-                return;
+            event.setCancelled(true);
+            if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                ItemStack itemStack = player.getItemInHand();
+                if(itemStack == null || itemStack.getType() == Material.AIR)return;
+                for (ClickActionItem clickActionItem : HSG.getClickActionItems()) {
+                    if (clickActionItem.equals(itemStack)) {
+                        clickActionItem.clickAction(player);
+                    }
+                }
             }
+            return;
         }
-        if (HSG.getGameTask().getState() == GameState.LiveGame || HSG.getGameTask().getState() == GameState.PreDeathmatch || HSG.getGameTask().getState() == GameState.DeathMatch) {
+        if (HSG.getGameTask().getState() == GameState.LiveGame || HSG.getGameTask().getState() == GameState.PreDeathmatch || HSG.getGameTask().getState() == GameState.DeathMatch || HSG.getGameTask().getState() == GameState.EndGame) {
             if ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && (event.getClickedBlock().getType() == Material.CHEST)) {
                 Block block = event.getClickedBlock();
-                event.setCancelled(true);
                 for (GameChest gameChest : chests) {
                     if (gameChest.getLocation().equals(block.getLocation())) {
+                        event.setCancelled(true);
+                        player.closeInventory();
+                        gamePlayer.setOpeningChest(gameChest);
+                        ChestPacketUtility.openChestPacket(block.getLocation());
                         if (!gameChest.isOpened()) {
                             gameChest.setOpened(true);
                             if (gameChest.isTier2()) {
@@ -98,6 +115,7 @@ public class ChestManager implements Listener {
                             } else {
                                 fillChest(TierType.TIER1, gameChest.getInventory());
                             }
+                            gamePlayer.getPlayerData().updateChests(1);
                         }
                         Location location = player.getLocation();
                         player.openInventory(gameChest.getInventory());
@@ -112,14 +130,20 @@ public class ChestManager implements Listener {
     public void onClose(InventoryCloseEvent event){
         Inventory inventory = event.getInventory();
         if(event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
             for (GameChest gameChest : chests) {
                 if (gameChest.getInventory().equals(inventory)) {
-                    Player player = (Player) event.getPlayer();
-                    player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
+                    if (gamePlayer.getOpeningChest() != null) {
+                        ChestPacketUtility.closeChestPacket(gamePlayer.getOpeningChest().getLocation());
+                        gamePlayer.setOpeningChest(null);
+                        player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
+                    }
                 }
             }
         }
     }
+
 
 
     /**
@@ -131,7 +155,6 @@ public class ChestManager implements Listener {
     public void fillChest(TierType type, Inventory inventory) {
 
         inventory.clear();
-        Random r = new Random();
         int next;
 
         if (type == TierType.TIER1) {

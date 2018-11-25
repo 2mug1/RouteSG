@@ -4,7 +4,8 @@ import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.player.HotsPlayer;
 import net.hotsmc.core.utility.PlayerDataUtility;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.database.PlayerData;
+import net.hotsmc.sg.database.MongoConnection;
+import net.hotsmc.sg.database.data.PlayerData;
 import net.hotsmc.sg.game.GamePlayer;
 import net.hotsmc.sg.utility.*;
 import org.bson.Document;
@@ -20,6 +21,7 @@ public class StatsCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
+            long total = HSG.getMongoConnection().getPlayers().countDocuments();
             if (args.length == 0) {
                 GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
                 if (gamePlayer == null) return true;
@@ -30,10 +32,13 @@ public class StatsCommand implements CommandExecutor {
                 ChatUtility.sendMessage(player, hotsPlayer.getColorName() + ChatColor.WHITE + "'s Records");
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Rank" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + hotsPlayer.getPlayerRank().name());
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Points" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getPoint());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Game Rank" + ChatColor.DARK_GRAY + "#" + ChatColor.YELLOW + playerData.getRank());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Games Won Ranking" + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getWonRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kill Ranking " + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getKillRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Point Ranking" + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getPointRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Games (Won/Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getWin() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + playerData.getPlayed());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kills (Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getKill());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Chests (Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getChests());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Top3 (Placed/Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getTop3() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + playerData.getPlayed());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kills" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getKill());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Chests" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getChests());
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "First Played" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + DateUtility.getDateFormatByTimestamp(playerData.getFirstPlayed()));
                 return true;
             }
@@ -51,10 +56,13 @@ public class StatsCommand implements CommandExecutor {
                 ChatUtility.sendMessage(player, PlayerDataUtility.getColorName(targetName) + ChatColor.WHITE + "'s Records");
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Rank" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + PlayerDataUtility.getRank(targetName));
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Points" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getPoint());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Game Rank" + ChatColor.DARK_GRAY + "#" + ChatColor.YELLOW + playerData.getRank());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Games Won Ranking" + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getWonRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kill Ranking" + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getKillRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Point Ranking" + ChatColor.DARK_GRAY + ": #" + ChatColor.YELLOW + playerData.getPointRank() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + total);
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "Games (Won/Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getWin() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + playerData.getPlayed());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kills (Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getKill());
-                ChatUtility.sendMessage(player, ChatColor.WHITE + "Chests (Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getChests());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Top3 (Placed/Total)" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getTop3() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + playerData.getPlayed());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Kills" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getKill());
+                ChatUtility.sendMessage(player, ChatColor.WHITE + "Chests" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + playerData.getChests());
                 ChatUtility.sendMessage(player, ChatColor.WHITE + "First Played" + ChatColor.DARK_GRAY + ": " + ChatColor.YELLOW + DateUtility.getDateFormatByTimestamp(playerData.getFirstPlayed()));
             } else {
                 ChatUtility.sendMessage(player, ChatColor.RED + "/stats <player>");
