@@ -26,7 +26,6 @@ public class GamePlayer {
     private PlayerData playerData;
     private boolean watching = false;
     private boolean voted = false;
-    private PlayerScoreboard scoreboard;
     private List<ItemStack> sponsorItems;
     private SponsorMenu sponsorMenu;
     private Location respawnLocation;
@@ -65,12 +64,6 @@ public class GamePlayer {
         player.teleport(location);
     }
 
-    public void startScoreboard(boolean minimize) {
-        scoreboard = new PlayerScoreboard(player, minimize);
-        scoreboard.setup();
-        scoreboard.start();
-    }
-
     public void resetPlayer() {
         player.getInventory().clear();
         EntityEquipment equipment = player.getEquipment();
@@ -100,13 +93,9 @@ public class GamePlayer {
     public void toggleSidebarMinimize() {
         if (playerData.isSidebarMinimize()) {
             playerData.updateSidebarMinimize(false);
-            scoreboard.stop();
-            startScoreboard(false);
             ChatUtility.sendMessage(player, ChatColor.GRAY + "Sidebar minimize has " + ChatColor.RED + "disabled");
         } else {
             playerData.updateSidebarMinimize(true);
-            scoreboard.stop();
-            startScoreboard(true);
             ChatUtility.sendMessage(player, ChatColor.GRAY + "Sidebar minimize has " + ChatColor.GREEN + "enabled");
         }
     }

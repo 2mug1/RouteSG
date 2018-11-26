@@ -7,6 +7,7 @@ import io.github.leonardosnt.bungeechannelapi.BungeeChannelApi;
 import lombok.Getter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.ClickActionItem;
+import net.hotsmc.core.scoreboard.BoardManager;
 import net.hotsmc.sg.command.*;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
@@ -68,6 +69,7 @@ public class HSG extends JavaPlugin {
         mongoConnection = new MongoConnection(new MongoConfig().load());
         mongoConnection.open();
         initClickItems();
+        HotsCore.getInstance().setBoardManager(new BoardManager(this, new GameScoreboardAdapter()));
     }
 
     @Override

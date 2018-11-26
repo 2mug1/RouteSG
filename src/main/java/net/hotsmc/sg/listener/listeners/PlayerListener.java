@@ -59,7 +59,6 @@ public class PlayerListener implements Listener {
         playerData.setName(player.getName());
         playerData.loadData();
         gamePlayer.setPlayerData(playerData);
-        gamePlayer.startScoreboard(playerData.isSidebarMinimize());
         gamePlayer.resetSponsorItems();
         GameTask gameTask = HSG.getGameTask();
         gameTask.addGamePlayer(gamePlayer);
