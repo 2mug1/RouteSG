@@ -3,7 +3,7 @@ package net.hotsmc.sg;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.core.scoreboard.Board;
 import net.hotsmc.core.scoreboard.BoardAdapter;
-import net.hotsmc.sg.database.data.PlayerData;
+import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.game.GamePlayer;
 import net.hotsmc.sg.game.GameState;
 import net.hotsmc.sg.game.GameTask;

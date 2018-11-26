@@ -3,10 +3,10 @@ package net.hotsmc.sg.database;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
-public class WinData {
+@AllArgsConstructor
+public class IntegerValueData {
 
     private String uuid;
-    private int win;
+    private int value;
 }

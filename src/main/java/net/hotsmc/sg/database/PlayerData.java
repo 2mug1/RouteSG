@@ -1,25 +1,15 @@
 package net.hotsmc.sg.database;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Sorts;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.utility.MongoUtility;
-import org.apache.logging.log4j.core.appender.db.nosql.mongo.MongoDBConnection;
-import org.bson.BsonDocument;
 import org.bson.Document;
-import org.bukkit.block.DoubleChest;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 @Getter
 @Setter
@@ -40,6 +30,8 @@ public class PlayerData {
     private int point;
 
     private int chests;
+
+    private int top3;
 
     private boolean sidebarMinimize;
 
@@ -76,7 +68,7 @@ public class PlayerData {
         document.put("KILL", 0);
         document.put("POINT", 1000);
         document.put("CHESTS", 0);
-        document.put("HIGHEST_RANK", 0);
+        document.put("TOP3", 0);
         document.put("SIDEBAR_MINIMIZE", false);
 
         setFirstPlayed(timestamp);
@@ -85,6 +77,7 @@ public class PlayerData {
         setKill(document.getInteger("KILL"));
         setPoint(document.getInteger("POINT"));
         setChests(document.getInteger("CHESTS"));
+        setTop3(document.getInteger("TOP3"));
         setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
 
         getMongoConnection().getPlayers().insertOne(document);
@@ -106,6 +99,7 @@ public class PlayerData {
             setKill(document.getInteger("KILL"));
             setPoint(document.getInteger("POINT"));
             setChests(document.getInteger("CHESTS"));
+            setTop3(document.getInteger("TOP3"));
             setFirstPlayed(new Timestamp(document.getLong("FIRST_PLAYED")));
             setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
 
@@ -149,14 +143,19 @@ public class PlayerData {
         updateInteger("POINT", this.point);
     }
 
+    public void updateTop3(int amount){
+        this.top3 = this.top3 + amount;
+        updateInteger("TOP3", this.top3);
+    }
+
 
     public int calculatedPoint(){
-        return  (int) (this.point*0.05);
+        return  (int) (this.point*0.02);
     }
 
 
     public int calculatedWinAddPoint(){
-        int add = 120;
+        int add = 100;
         addPoint(add);
         return add;
     }
@@ -166,18 +165,52 @@ public class PlayerData {
         updateInteger("CHESTS", this.chests);
     }
 
-    public int getRank() {
-        List<WinData> all = Lists.newArrayList();
-        for (Document document : getMongoConnection().getPlayers().find()) {
-            all.add(new WinData(document.getString("UUID"), document.getInteger("WIN")));
+    public int getWonRank() {
+        List<IntegerValueData> winData = Lists.newArrayList();
+        for (Document document : getMongoConnection().getPlayers().find().sort(Sorts.orderBy(Sorts.descending("WIN")))) {
+            winData.add(new IntegerValueData(document.getString("UUID"), document.getInteger("WIN")));
         }
-        for (int i = 0; i < all.size(); i++) {
-            if (all.get(i).getUuid().equals(this.uuid)) {
+
+
+        for (int i = 0; i < winData.size(); i++) {
+            if (winData.get(i).getUuid().equals(uuid)) {
                 return i + 1;
             }
         }
         return 0;
     }
+
+    public int getKillRank() {
+        List<IntegerValueData> killRankData = Lists.newArrayList();
+        for (Document document : getMongoConnection().getPlayers().find().sort(Sorts.orderBy(Sorts.descending("KILL")))) {
+            killRankData.add(new IntegerValueData(document.getString("UUID"), document.getInteger("KILL")));
+        }
+
+
+        for (int i = 0; i < killRankData.size(); i++) {
+            if (killRankData.get(i).getUuid().equals(uuid)) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+    public int getPointRank() {
+        List<IntegerValueData> pointRankData = Lists.newArrayList();
+        for (Document document : getMongoConnection().getPlayers().find().sort(Sorts.orderBy(Sorts.descending("POINT")))) {
+            pointRankData.add(new IntegerValueData(document.getString("UUID"), document.getInteger("POINT")));
+        }
+
+
+        for (int i = 0; i < pointRankData.size(); i++) {
+            if (pointRankData.get(i).getUuid().equals(uuid)) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+
 
     public void updateSidebarMinimize(boolean sidebarMinimize){
         this.sidebarMinimize = sidebarMinimize;

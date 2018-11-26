@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.database.data.PlayerData;
+import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.menu.SponsorMenu;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.utility.ChatUtility;

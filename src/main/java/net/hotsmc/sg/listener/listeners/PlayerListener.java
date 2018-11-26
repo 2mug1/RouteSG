@@ -1,9 +1,7 @@
 package net.hotsmc.sg.listener.listeners;
 
 import net.hotsmc.core.HotsCore;
-import net.hotsmc.core.ServerType;
-import net.hotsmc.core.gui.ClickActionItem;
-import net.hotsmc.sg.database.data.PlayerData;
+import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.utility.ChatUtility;
@@ -13,7 +11,6 @@ import net.hotsmc.sg.utility.PlayerUtility;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
-import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
