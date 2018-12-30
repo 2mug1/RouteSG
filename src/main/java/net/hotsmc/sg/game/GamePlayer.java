@@ -4,8 +4,11 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
+import net.hotsmc.core.gui.ClickActionItem;
+import net.hotsmc.core.hotbar.HotbarAdapter;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.database.PlayerData;
+import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.menu.SponsorMenu;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.utility.ChatUtility;
@@ -31,6 +34,7 @@ public class GamePlayer {
     private Location respawnLocation;
     private PlayerFreezingTask playerFreezingTask;
     private GameChest openingChest;
+    private PlayerHotbar hotbar;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -87,16 +91,6 @@ public class GamePlayer {
     public void stopFreezingTask(){
         if(playerFreezingTask != null){
             playerFreezingTask.cancel();
-        }
-    }
-
-    public void toggleSidebarMinimize() {
-        if (playerData.isSidebarMinimize()) {
-            playerData.updateSidebarMinimize(false);
-            ChatUtility.sendMessage(player, ChatColor.GRAY + "Sidebar minimize has " + ChatColor.RED + "disabled");
-        } else {
-            playerData.updateSidebarMinimize(true);
-            ChatUtility.sendMessage(player, ChatColor.GRAY + "Sidebar minimize has " + ChatColor.GREEN + "enabled");
         }
     }
 
@@ -197,9 +191,16 @@ public class GamePlayer {
         return 0;
     }
 
-    public void setSpectateItem(){
+    public void setHotbar(PlayerHotbar hotbar) {
+        this.hotbar = hotbar;
         player.getInventory().clear();
-        player.getInventory().setItem(4, HSG.getClickActionItems().get(0).getItemStack());
+        HotbarAdapter adapter = hotbar.getAdapter();
+        ClickActionItem[] items = adapter.getItems();
+        for(int i = 0; i < items.length; i++){
+            if(items[i] != null) {
+                player.getInventory().setItem(i, items[i].getItemStack());
+            }
+        }
         player.updateInventory();
     }
 
@@ -217,5 +218,9 @@ public class GamePlayer {
         if (isOnline()) {
             player.showPlayer(other.getPlayer());
         }
+    }
+
+    public void sendMessage(String s) {
+        ChatUtility.sendMessage(player, s);
     }
 }

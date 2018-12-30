@@ -4,7 +4,6 @@ version: 1.0
 softdepend: [HotsCore]
 commands:
   hsg:
-  sidebar:
   spec:
   stats:
   sponsor:
@@ -13,3 +12,6 @@ commands:
   vote:
     aliases: [v]
   gf:
+  host:
+  register:
+  unregister:

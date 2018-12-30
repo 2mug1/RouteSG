@@ -5,10 +5,17 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Sorts;
 import lombok.Getter;
+import net.hotsmc.core.other.Style;
+import net.hotsmc.core.utility.NameUtility;
+import net.hotsmc.core.utility.PlayerDataUtility;
 import org.bson.Document;
+import org.bukkit.ChatColor;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @Getter
 public class MongoConnection {
@@ -49,5 +56,26 @@ public class MongoConnection {
         }
         mongoDatabase = client.getDatabase(databaseName);
         players = mongoDatabase.getCollection("players");
+    }
+
+    public List<String> getTop10(String key){
+        List<IntegerValueData> values= new ArrayList<>();
+        int rank = 0;
+        for (Document document : players.find().sort(Sorts.orderBy(Sorts.descending(key)))) {
+            rank++;
+            if(rank > 10){
+                break;
+            }
+            values.add(new IntegerValueData(document.getString("NAME"), document.getInteger(key)));
+        }
+        List<String> format = new ArrayList<>();
+        int valueRank = 1;
+        for (IntegerValueData data : values) {
+            format.add("" + ChatColor.YELLOW + valueRank + ". " + PlayerDataUtility.getColorName(data.getString()) + ChatColor.GRAY + " - " + ChatColor.YELLOW + data.getValue());
+            valueRank++;
+        }
+        format.add(0, Style.SCOREBAORD_SEPARATOR);
+        format.add(Style.SCOREBAORD_SEPARATOR);
+        return format;
     }
 }

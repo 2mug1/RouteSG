@@ -4,14 +4,14 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
+import net.hotsmc.core.libs.bungeechannelapi.BungeeChannelApi;
+import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.reflection.BukkitReflection;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.task.StrikeLightningTask;
-import net.hotsmc.sg.utility.ChatUtility;
-import net.hotsmc.sg.utility.FireworkGenerator;
-import net.hotsmc.sg.utility.ServerUtility;
-import net.hotsmc.sg.utility.TimeUtility;
+import net.hotsmc.sg.utility.*;
 import net.minecraft.server.v1_7_R4.ChatTypeAdapterFactory;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -19,12 +19,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class GameTask {
 
+    private UUID host = null;
     private GameConfig gameConfig;
     private GameState state;
     private VoteManager voteManager;
@@ -35,7 +38,6 @@ public class GameTask {
     private boolean timerFlag = false;
 
     private int circleSize = 63;
-
 
     public GameTask(GameConfig gameConfig) {
         this.gameConfig = gameConfig;
@@ -99,7 +101,11 @@ public class GameTask {
 
         //LobbyTask
         if (state == GameState.Lobby) {
-            tickLobby();
+            if(gameConfig.isCustomSG()) {
+               tickCustomSGLobby();
+            }else{
+                tickLobby();
+            }
         }
 
         if (state == GameState.PreGame) {
@@ -216,19 +222,45 @@ public class GameTask {
         }
     }
 
+    private void teleportToSpawnCustomSG() {
+        for (int i = 0; i < getCustomSGPlayers().size(); i++) {
+            GamePlayer gamePlayer = getCustomSGPlayers().get(i);
+            Location location = getCurrentMap().getSpawns().get(i);
+            gamePlayer.teleport(location);
+            gamePlayer.getPlayer().getInventory().clear();
+            gamePlayer.getPlayer().updateInventory();
+            gamePlayer.startFreezingTask(location);
+        }
+    }
+
+
     /**
      *
      */
     private void onPreGame() {
-        voteManager.setVoting(false);
-        for (GamePlayer gamePlayer : gamePlayers) {
-            gamePlayer.setVoted(false);
+        if(!gameConfig.isCustomSG()) {
+            voteManager.setVoting(false);
+            for (GamePlayer gamePlayer : gamePlayers) {
+                gamePlayer.setVoted(false);
+            }
+            currentMap = voteManager.getDecidedMapData();
         }
-        currentMap = voteManager.getDecidedMapData();
         ChatUtility.broadcast(ChatColor.YELLOW + "Loading " + currentMap.getName() + "...");
         currentMap.loadWorld();
         chestManager.loadAllChest(currentMap);
-        teleportToSpawn();
+        if(gameConfig.isCustomSG()) {
+            teleportToSpawnCustomSG();
+            Player hostPlayer = Bukkit.getPlayer(host);
+            if(hostPlayer != null){
+                hostPlayer.teleport(currentMap.getDefaultSpawn());
+                getGamePlayer(hostPlayer).setHotbar(PlayerHotbar.SPECTATE);
+                for(GamePlayer gamePlayer : getGamePlayers()) {
+                    gamePlayer.hidePlayer(getGamePlayer(hostPlayer));
+                }
+            }
+        }else{
+            teleportToSpawn();
+        }
         ChatUtility.broadcast(ChatColor.YELLOW + "Map name" + ChatColor.DARK_GRAY + ": " + ChatColor.DARK_GREEN + currentMap.getName());
         ChatUtility.broadcast(ChatColor.DARK_RED + "Please wait " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "seconds before the games begin.");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until the games begin!");
@@ -244,6 +276,7 @@ public class GameTask {
         for(GamePlayer gamePlayer : gamePlayers){
             gamePlayer.stopFreezingTask();
             gamePlayer.getPlayerData().updatePlayed(1);
+            gamePlayer.getPlayer().playSound(gamePlayer.getPlayer().getLocation(), Sound.NOTE_PIANO, 2, 2);
         }
         BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 40);
         ChatUtility.broadcast(ChatColor.DARK_AQUA + "The games have begun!");
@@ -345,7 +378,7 @@ public class GameTask {
                     a.add(gamePlayer1);
                 }
             }
-             winner = a.get(0);
+            winner = a.get(0);
             winner.getPlayerData().updateWin(1);
             ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
             ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
@@ -373,18 +406,45 @@ public class GameTask {
             gamePlayer.disableWatching();
             gamePlayer.teleport(gameConfig.getLobbyLocation());
             gamePlayer.resetPlayer();
+            gamePlayer.setHotbar(PlayerHotbar.LOBBY);
         }
         //Hubに転送
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
-            ChatUtility.sendMessage(player, ChatColor.GRAY + "Connecting to " + ChatColor.GREEN + "Hub");
-            HSG.getInstance().getBungeeChannelApi().connect(player, "hub");
+            HotsCore.getInstance().getBungeeChannelApi().connect(player, "hub");
         }
         voteManager.selectRandomVoteMaps();
         voteManager.setVoting(true);
         currentMap.unloadWorld();
-        BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 24);
+        if(gameConfig.isCustomSG()){
+            BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 25);
+            host = null;
+            HSG.getInstance().getWhitelistedPlayers().clear();
+        } else {
+            BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 24);
+        }
         time = gameConfig.getLobbyTime();
         state = GameState.Lobby;
+    }
+
+    /**
+     *
+     */
+    private void tickCustomSGLobby(){
+        int online = getCustomSGPlayers().size();
+        if (timerFlag) {
+            //人数が既定の人数より少なくなってしまったら
+            if (online < gameConfig.getStartPlayerSize()) {
+                setTimerFlag(false);
+                setTime(gameConfig.getLobbyTime());
+                ChatUtility.broadcast(ChatColor.RED + "Not enough players stopping countdown.");
+            }
+        }
+        if(time <= 5){
+            for(Player player : Bukkit.getServer().getOnlinePlayers()){
+                player.playSound(player.getLocation(), Sound.CLICK, 2, 1);
+            }
+        }
+        ServerUtility.setMotd("0," + time);
     }
 
     /**
@@ -409,7 +469,13 @@ public class GameTask {
                 voteManager.setVoting(true);
                 for(GamePlayer gamePlayer:gamePlayers){
                     gamePlayer.setVoted(false);
+                    gamePlayer.getPlayer().playSound(gamePlayer.getPlayer().getLocation(), Sound.CLICK, 2, 1);
                 }
+            }
+        }
+        if(time <= 5){
+            for(Player player : Bukkit.getServer().getOnlinePlayers()){
+                player.playSound(player.getLocation(), Sound.CLICK, 2, 1);
             }
         }
         if (time == 45) {
@@ -434,24 +500,48 @@ public class GameTask {
      *
      */
     private void tickPreGame(){
-        //スコップわたす～～
-        if(time == 15){
-            for(Player player : Bukkit.getServer().getOnlinePlayers()) {
-                for (int i = 0; i < 9; i++) {
-                    player.getInventory().setItem(i, new ItemStack(Material.WOOD_SPADE));
-                }
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if(!player.isOnline()){
-                            this.cancel();
-                            return;
-                        }
-                        player.getInventory().clear();
-                        player.updateInventory();
-                        this.cancel();
+        if(time == 15) {
+            if (gameConfig.isCustomSG()) {
+                for (GamePlayer gamePlayer : getCustomSGPlayers()) {
+                    for (int i = 0; i < 9; i++) {
+                        gamePlayer.getPlayer().getInventory().setItem(i, new ItemStack(Material.WOOD_SPADE));
                     }
-                }.runTaskLater(HSG.getInstance(), 1);
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (!gamePlayer.isOnline()) {
+                                this.cancel();
+                                return;
+                            }
+                            gamePlayer.getPlayer().getInventory().clear();
+                            gamePlayer.getPlayer().updateInventory();
+                            this.cancel();
+                        }
+                    }.runTaskLater(HSG.getInstance(), 1);
+                }
+            }else{
+                for (GamePlayer gamePlayer : getGamePlayers()) {
+                    for (int i = 0; i < 9; i++) {
+                        gamePlayer.getPlayer().getInventory().setItem(i, new ItemStack(Material.WOOD_SPADE));
+                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (!gamePlayer.isOnline()) {
+                                this.cancel();
+                                return;
+                            }
+                            gamePlayer.getPlayer().getInventory().clear();
+                            gamePlayer.getPlayer().updateInventory();
+                            this.cancel();
+                        }
+                    }.runTaskLater(HSG.getInstance(), 1);
+                }
+            }
+        }
+        if(time <= 5){
+            for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+                player.playSound(player.getLocation(), Sound.NOTE_PIANO, 1, 1);
             }
         }
         ServerUtility.setMotd("1," + time);
@@ -530,5 +620,27 @@ public class GameTask {
         if (state == GameState.EndGame) {
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until sending to Hub");
         }
+    }
+
+    public void updateHost(Player player){
+        this.host = player.getUniqueId();
+        HSG.getInstance().getWhitelistedPlayers().add(player.getName().toLowerCase());
+        ChatUtility.sendMessage(player, Style.YELLOW + "You currently are the host.");
+        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
+        gamePlayer.setHotbar(PlayerHotbar.CUSTOMSG_HOST_LOBBY);
+        gamePlayer.enableWatching();
+        player.getInventory().setItem(0, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Sword", Material.STONE_SWORD, true));
+        player.getInventory().setItem(1, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Rod", Material.FISHING_ROD, true));
+        player.updateInventory();
+    }
+
+    public List<GamePlayer> getCustomSGPlayers(){
+        List<GamePlayer> toReturn = new ArrayList<>();
+        for(GamePlayer gamePlayer : gamePlayers){
+            if(gamePlayer.getPlayer().getUniqueId() != host){
+                toReturn.add(gamePlayer);
+            }
+        }
+        return toReturn;
     }
 }

@@ -4,11 +4,15 @@ import com.google.common.collect.Lists;
 import com.mongodb.client.model.Sorts;
 import lombok.Getter;
 import lombok.Setter;
+import net.hotsmc.core.other.Style;
+import net.hotsmc.core.utility.PlayerDataUtility;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.utility.MongoUtility;
 import org.bson.Document;
+import org.bukkit.ChatColor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -16,24 +20,16 @@ import java.util.List;
 public class PlayerData {
 
     private String uuid;
-
     private String name;
-
     private Timestamp firstPlayed;
-
     private int win;
-
     private int played;
-
     private int kill;
-
     private int point;
-
     private int chests;
-
     private int top3;
-
-    private boolean sidebarMinimize;
+    private boolean sidebarMCSG;
+    private boolean lobbyPvP;
 
     public PlayerData(String uuid){
         this.uuid = uuid;
@@ -69,7 +65,8 @@ public class PlayerData {
         document.put("POINT", 1000);
         document.put("CHESTS", 0);
         document.put("TOP3", 0);
-        document.put("SIDEBAR_MINIMIZE", false);
+        document.put("SIDEBAR_MCSG", false);
+        document.put("LOBBY_PVP", true);
 
         setFirstPlayed(timestamp);
         setWin(document.getInteger("WIN"));
@@ -78,7 +75,8 @@ public class PlayerData {
         setPoint(document.getInteger("POINT"));
         setChests(document.getInteger("CHESTS"));
         setTop3(document.getInteger("TOP3"));
-        setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
+        setSidebarMCSG(document.getBoolean("SIDEBAR_MCSG"));
+        setLobbyPvP(document.getBoolean("LOBBY_PVP"));
 
         getMongoConnection().getPlayers().insertOne(document);
     }
@@ -101,7 +99,8 @@ public class PlayerData {
             setChests(document.getInteger("CHESTS"));
             setTop3(document.getInteger("TOP3"));
             setFirstPlayed(new Timestamp(document.getLong("FIRST_PLAYED")));
-            setSidebarMinimize(document.getBoolean("SIDEBAR_MINIMIZE"));
+            setSidebarMCSG(document.getBoolean("SIDEBAR_MCSG"));
+            setLobbyPvP(document.getBoolean("LOBBY_PVP"));
 
             //データベースに登録されている名前と違ったら更新
             if (!name.equals(document.getString("NAME"))) {
@@ -173,7 +172,7 @@ public class PlayerData {
 
 
         for (int i = 0; i < winData.size(); i++) {
-            if (winData.get(i).getUuid().equals(uuid)) {
+            if (winData.get(i).getString().equals(uuid)) {
                 return i + 1;
             }
         }
@@ -188,7 +187,7 @@ public class PlayerData {
 
 
         for (int i = 0; i < killRankData.size(); i++) {
-            if (killRankData.get(i).getUuid().equals(uuid)) {
+            if (killRankData.get(i).getString().equals(uuid)) {
                 return i + 1;
             }
         }
@@ -203,17 +202,20 @@ public class PlayerData {
 
 
         for (int i = 0; i < pointRankData.size(); i++) {
-            if (pointRankData.get(i).getUuid().equals(uuid)) {
+            if (pointRankData.get(i).getString().equals(uuid)) {
                 return i + 1;
             }
         }
         return 0;
     }
 
+    public void updateSidebarMCSG(boolean value){
+        this.sidebarMCSG = value;
+        updateOne(findByUUID().append("SIDEBAR_MCSG", sidebarMCSG));
+    }
 
-
-    public void updateSidebarMinimize(boolean sidebarMinimize){
-        this.sidebarMinimize = sidebarMinimize;
-        updateOne(findByUUID().append("SIDEBAR_MINIMIZE", sidebarMinimize));
+    public void updateLobbyPvP(boolean value){
+        this.lobbyPvP = value;
+        updateOne(findByUUID().append("LOBBY_PVP", lobbyPvP));
     }
 }

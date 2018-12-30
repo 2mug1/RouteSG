@@ -3,8 +3,6 @@ package net.hotsmc.sg.game;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.badlion.gspigot.FakeMultiBlockChange;
-import net.hotsmc.core.ServerInfo;
-import net.hotsmc.core.ServerType;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.utility.PositionInfo;

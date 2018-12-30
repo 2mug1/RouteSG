@@ -8,6 +8,7 @@ import org.bukkit.Location;
 public class GameConfig {
 
     ConfigCursor configCursor;
+    private boolean customSG;
     private int lobbyTime;
     private int pregameTime;
     private int livegameTime;
@@ -22,6 +23,7 @@ public class GameConfig {
     }
 
     public GameConfig load(){
+        customSG = configCursor.getBoolean("CustomSG");
         lobbyTime = configCursor.getInt("LobbyTime");
         pregameTime = configCursor.getInt("PreGameTime");
         livegameTime = configCursor.getInt("LiveGameTime");

@@ -7,6 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class IntegerValueData {
 
-    private String uuid;
+    private String string;
     private int value;
 }

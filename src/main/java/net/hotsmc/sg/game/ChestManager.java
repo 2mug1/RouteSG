@@ -7,6 +7,7 @@ import net.hotsmc.core.gui.ClickActionItem;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
+import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.utility.BlockUtility;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ChestPacketUtility;
@@ -86,19 +87,12 @@ public class ChestManager implements Listener {
         Player player = event.getPlayer();
         GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
         if (gamePlayer == null) return;
+
         if (gamePlayer.isWatching()) {
             event.setCancelled(true);
-            if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                ItemStack itemStack = player.getItemInHand();
-                if(itemStack == null || itemStack.getType() == Material.AIR)return;
-                for (ClickActionItem clickActionItem : HSG.getClickActionItems()) {
-                    if (clickActionItem.equals(itemStack)) {
-                        clickActionItem.clickAction(player);
-                    }
-                }
-            }
             return;
         }
+
         if (HSG.getGameTask().getState() == GameState.LiveGame || HSG.getGameTask().getState() == GameState.PreDeathmatch || HSG.getGameTask().getState() == GameState.DeathMatch || HSG.getGameTask().getState() == GameState.EndGame) {
             if ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && (event.getClickedBlock().getType() == Material.CHEST)) {
                 Block block = event.getClickedBlock();
@@ -143,8 +137,6 @@ public class ChestManager implements Listener {
             }
         }
     }
-
-
 
     /**
      * チェストの処理
