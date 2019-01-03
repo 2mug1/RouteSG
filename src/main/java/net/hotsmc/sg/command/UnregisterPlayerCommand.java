@@ -40,7 +40,7 @@ public class UnregisterPlayerCommand implements CommandExecutor {
                     return true;
                 }
                 HSG.getInstance().getWhitelistedPlayers().remove(name.toLowerCase());
-                ChatUtility.sendMessage(player, Style.YELLOW + name + Style.AQUA + " has been removed from whitelist.");
+                ChatUtility.sendMessage(player, Style.YELLOW + name + Style.AQUA + " has been removed from roster.");
             }else{
                 ChatUtility.sendMessage(player,Style.RED + "/unregister <player>");
             }

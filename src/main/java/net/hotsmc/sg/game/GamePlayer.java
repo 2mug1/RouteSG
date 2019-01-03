@@ -11,6 +11,7 @@ import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.menu.SponsorMenu;
 import net.hotsmc.sg.task.PlayerFreezingTask;
+import net.hotsmc.sg.team.GameTeam;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import net.hotsmc.sg.utility.PlayerUtility;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -35,6 +37,7 @@ public class GamePlayer {
     private PlayerFreezingTask playerFreezingTask;
     private GameChest openingChest;
     private PlayerHotbar hotbar;
+    private boolean alive = true;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -222,5 +225,26 @@ public class GamePlayer {
 
     public void sendMessage(String s) {
         ChatUtility.sendMessage(player, s);
+    }
+
+    public UUID getUUID() {
+        return player.getUniqueId();
+    }
+
+    public String getName() {
+        return player.getName();
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public GameTeam getInTeam(){
+        for(GameTeam gameTeam : HSG.getGameTask().getTeams()){
+            if(gameTeam.getTeamPlayer(this) != null){
+                return gameTeam;
+            }
+        }
+        return null;
     }
 }

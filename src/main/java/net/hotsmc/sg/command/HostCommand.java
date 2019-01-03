@@ -16,7 +16,7 @@ public class HostCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if(HotsCore.getHotsPlayer(player).getPlayerRank().getPermissionLevel() < PlayerRank.Emerald.getPermissionLevel()){
+            if(HotsCore.getHotsPlayer(player).getPlayerRank().getPermissionLevel() < PlayerRank.Diamond.getPermissionLevel()){
                 player.sendMessage(Style.RED + "You don't have permission.");
                 return true;
             }
@@ -31,7 +31,7 @@ public class HostCommand implements CommandExecutor {
                     return true;
                 }
                 if(game.getHost() != null){
-                    player.sendMessage(Style.RED + "This game has already been hosting.");
+                    player.sendMessage(Style.RED + "You are not hosting the game.");
                     return true;
                 }
                 game.updateHost(player);

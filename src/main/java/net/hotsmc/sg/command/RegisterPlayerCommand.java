@@ -1,5 +1,7 @@
 package net.hotsmc.sg.command;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.core.player.PlayerRank;
@@ -11,17 +13,20 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RegisterPlayerCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if (HotsCore.getHotsPlayer(player).getPlayerRank().getPermissionLevel() < PlayerRank.Emerald.getPermissionLevel()) {
-                player.sendMessage(Style.RED + "You don't have permission.");
+            final GameTask game = HSG.getGameTask();
+            if (!game.getGameConfig().isCustomSG()) {
+                ChatUtility.sendMessage(player, Style.RED + "This server isn't custom sg.");
                 return true;
             }
-            final GameTask game = HSG.getGameTask();
             if (game.getGameConfig().isCustomSG()) {
                 if (!player.getUniqueId().equals(game.getHost())) {
                     player.sendMessage(Style.RED + "You are not host.");
@@ -29,26 +34,22 @@ public class RegisterPlayerCommand implements CommandExecutor {
                 }
             }
 
-            if(args.length == 1) {
-                if (!game.getGameConfig().isCustomSG()) {
-                    ChatUtility.sendMessage(player,Style.RED + "This server isn't custom sg.");
-                    return true;
+            for (int i = 0; i < args.length; i++) {
+                String name = args[i];
+                if (HSG.getInstance().getWhitelistedPlayers().contains(name.toLowerCase())) {
+                    ChatUtility.sendMessage(player, Style.RED + "Error: Failed to register " + name);
                 }
-                final String name = args[0];
-
-                if(name.equalsIgnoreCase(player.getName())){
-                    ChatUtility.sendMessage(player, Style.RED + "Can't yourself.");
-                    return true;
+               else if (!HSG.getInstance().getWhitelistedPlayers().contains(name.toLowerCase())) {
+                    HSG.getInstance().getWhitelistedPlayers().add(name.toLowerCase());
+                    ChatUtility.sendMessage(player, Style.YELLOW + name + Style.AQUA + " has been added to roster.");
+                    ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                    out.writeUTF("ClickableMessageToPlayer");
+                    out.writeUTF(name);
+                    out.writeUTF("§e§lYou have been invited from");
+                    out.writeUTF("§b§l§n" + HSG.getSettings().getServerName());
+                    out.writeUTF("/join " + HSG.getSettings().getServerName());
+                    player.sendPluginMessage(HSG.getInstance(), "BungeeCord", out.toByteArray());
                 }
-
-                if(HSG.getInstance().getWhitelistedPlayers().contains(name.toLowerCase())){
-                    ChatUtility.sendMessage(player, Style.RED + name + " has already been registered to whitelist.");
-                    return true;
-                }
-                HSG.getInstance().getWhitelistedPlayers().add(name.toLowerCase());
-                ChatUtility.sendMessage(player, Style.YELLOW + name + Style.AQUA + " has been added to whitelist.");
-            }else{
-                ChatUtility.sendMessage(player,Style.RED + "/register <player>");
             }
         }
         return true;

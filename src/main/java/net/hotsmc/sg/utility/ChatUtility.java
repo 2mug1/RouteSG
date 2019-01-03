@@ -30,4 +30,10 @@ public class ChatUtility {
             sendMessage(player, message);
         }
     }
+
+    public static void normalBroadcast(String message){
+        for(Player player : Bukkit.getServer().getOnlinePlayers()){
+            player.sendMessage(message);
+        }
+    }
 }

@@ -60,10 +60,12 @@ public class GameScoreboardAdapter implements BoardAdapter {
             toReturn.add(4,MAIN + "Players: " + SUB + game.countAlive() + Style.GRAY + "/" + SUB + "24");
             if (state == GameState.Lobby) {
                 if (game.isTimerFlag()) {
-                    toReturn.add(Style.SCOREBAORD_SEPARATOR);
-                    toReturn.add(MAIN + "Map Votes:");
-                    for (VoteMap voteMap : game.getVoteManager().getVoteMaps()) {
-                        toReturn.add(SUB + "- " + voteMap.getMapName() + ": " + voteMap.getVotes());
+                    if(!game.getGameConfig().isCustomSG()) {
+                        toReturn.add(Style.SCOREBAORD_SEPARATOR);
+                        toReturn.add(MAIN + "Map Votes:");
+                        for (VoteMap voteMap : game.getVoteManager().getVoteMaps()) {
+                            toReturn.add(SUB + "- " + voteMap.getMapName() + ": " + voteMap.getVotes());
+                        }
                     }
                 }
             }

@@ -16,6 +16,10 @@ public class SponsorCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
         if(commandSender instanceof Player){
             Player player = (Player) commandSender;
+            if(!HSG.getGameTask().isSponsor()){
+                ChatUtility.sendMessage(player, ChatColor.RED + "Sponsor has been disabled by settings.");
+                return true;
+            }
             if(args.length == 1){
                 if(HSG.getGameTask().getState() == GameState.Lobby || HSG.getGameTask().getState() == GameState.PreDeathmatch ||
                         HSG.getGameTask().getState() == GameState.DeathMatch || HSG.getGameTask().getState() == GameState.EndGame){

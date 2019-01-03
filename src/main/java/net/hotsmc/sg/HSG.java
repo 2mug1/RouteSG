@@ -52,6 +52,7 @@ public class HSG extends JavaPlugin {
     private SelectMapMenu selectMapMenu;
 
     private List<String> whitelistedPlayers;
+    private List<String> observerPlayers;
 
     @Override
     public void onEnable() {
@@ -70,9 +71,10 @@ public class HSG extends JavaPlugin {
         spectateMenu = new SpectateMenu();
         if(gameTask.getGameConfig().isCustomSG()) {
             whitelistedPlayers = new ArrayList<>();
+            observerPlayers = new ArrayList<>();
             selectMapMenu = new SelectMapMenu();
-
         }
+        Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
     }
 
     @Override
@@ -92,8 +94,13 @@ public class HSG extends JavaPlugin {
         this.getCommand("sponsor").setExecutor(new SponsorCommand());
         this.getCommand("gf").setExecutor(new GroundFixCommand());
         this.getCommand("host").setExecutor(new HostCommand());
+        this.getCommand("givehost").setExecutor(new GiveHostCommand());
         this.getCommand("register").setExecutor(new RegisterPlayerCommand());
         this.getCommand("unregister").setExecutor(new UnregisterPlayerCommand());
+        this.getCommand("frkbreload").setExecutor(new FRKBReloadCommand());
+        this.getCommand("roster").setExecutor(new RosterCommand());
+        this.getCommand("team").setExecutor(new TeamCommand());
+        this.getCommand("observer").setExecutor(new ObserverCommand());
     }
 
     public static List<Player> getOnlinePlayers() {

@@ -13,5 +13,10 @@ commands:
     aliases: [v]
   gf:
   host:
+  givehost:
   register:
   unregister:
+  frkbreload:
+  roster:
+  team:
+  observer:

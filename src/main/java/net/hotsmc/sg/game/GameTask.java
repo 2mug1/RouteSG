@@ -1,6 +1,8 @@
 package net.hotsmc.sg.game;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
@@ -11,6 +13,8 @@ import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.reflection.BukkitReflection;
 import net.hotsmc.sg.task.PlayerFreezingTask;
 import net.hotsmc.sg.task.StrikeLightningTask;
+import net.hotsmc.sg.team.GameTeam;
+import net.hotsmc.sg.team.TeamType;
 import net.hotsmc.sg.utility.*;
 import net.minecraft.server.v1_7_R4.ChatTypeAdapterFactory;
 import org.bukkit.*;
@@ -18,8 +22,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +42,12 @@ public class GameTask {
     private MapData currentMap = null;
     private List<GamePlayer> gamePlayers;
     private boolean timerFlag = false;
+    private boolean hostWithPlay = false;
+    private boolean sponsor;
+    private boolean gracePeriod3Minutes = false;
+    private boolean teamFight = false;
+
+    private GameTeam[] teams;
 
     private int circleSize = 63;
 
@@ -47,6 +59,12 @@ public class GameTask {
         voteManager = new VoteManager();
         chestManager = new ChestManager();
         chestManager.loadTierItems();
+        teams = new GameTeam[2];
+        teams[0] = new GameTeam(TeamType.AQUA);
+        teams[1] = new GameTeam(TeamType.RED);
+        if(gameConfig.isCustomSG()){
+            sponsor = false;
+        }
     }
 
     public void start() {
@@ -223,6 +241,30 @@ public class GameTask {
     }
 
     private void teleportToSpawnCustomSG() {
+        if(hostWithPlay){
+            Player hostPlayer = Bukkit.getPlayer(host);
+            if(hostPlayer != null){
+                hostPlayer.teleport(currentMap.getDefaultSpawn());
+                GamePlayer hostGP = getGamePlayer(hostPlayer);
+                if(hostGP != null){
+                    hostGP.setHotbar(PlayerHotbar.SPECTATE);
+                    hostGP.enableWatching();
+                }
+            }
+        }
+        if(HSG.getInstance().getObserverPlayers().size() >= 1){
+            for(String name : HSG.getInstance().getObserverPlayers()){
+                Player obs = Bukkit.getPlayer(name);
+                if(obs != null){
+                    obs.teleport(currentMap.getDefaultSpawn());
+                    GamePlayer obsGP = getGamePlayer(obs);
+                    if(obsGP != null){
+                        obsGP.setHotbar(PlayerHotbar.SPECTATE);
+                        obsGP.enableWatching();
+                    }
+                }
+            }
+        }
         for (int i = 0; i < getCustomSGPlayers().size(); i++) {
             GamePlayer gamePlayer = getCustomSGPlayers().get(i);
             Location location = getCurrentMap().getSpawns().get(i);
@@ -232,7 +274,6 @@ public class GameTask {
             gamePlayer.startFreezingTask(location);
         }
     }
-
 
     /**
      *
@@ -250,21 +291,23 @@ public class GameTask {
         chestManager.loadAllChest(currentMap);
         if(gameConfig.isCustomSG()) {
             teleportToSpawnCustomSG();
-            Player hostPlayer = Bukkit.getPlayer(host);
-            if(hostPlayer != null){
-                hostPlayer.teleport(currentMap.getDefaultSpawn());
-                getGamePlayer(hostPlayer).setHotbar(PlayerHotbar.SPECTATE);
-                for(GamePlayer gamePlayer : getGamePlayers()) {
-                    gamePlayer.hidePlayer(getGamePlayer(hostPlayer));
-                }
-            }
-        }else{
-            teleportToSpawn();
         }
         ChatUtility.broadcast(ChatColor.YELLOW + "Map name" + ChatColor.DARK_GRAY + ": " + ChatColor.DARK_GREEN + currentMap.getName());
         ChatUtility.broadcast(ChatColor.DARK_RED + "Please wait " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + "seconds before the games begin.");
         ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + getGameConfig().getPregameTime() + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until the games begin!");
-        ChatUtility.broadcast("" + ChatColor.YELLOW + ChatColor.BOLD + "WARNING " + ChatColor.RED + "Team is up to 4 people. / チームは4人まで");
+        if(!gameConfig.isCustomSG()) {
+            ChatUtility.broadcast("" + ChatColor.YELLOW + ChatColor.BOLD + "WARNING " + ChatColor.RED + "Team is up to 4 people. / チームは4人まで");
+        }else{
+            ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+            ChatUtility.normalBroadcast(Style.GRAY + " ● " + Style.LIGHT_PURPLE + Style.BOLD +  "Custom SG");
+            ChatUtility.normalBroadcast("");
+            ChatUtility.normalBroadcast(Style.YELLOW + " Host With Play" + Style.GRAY + ": " + (hostWithPlay ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
+            ChatUtility.normalBroadcast(Style.YELLOW + " Sponsor" + Style.GRAY + ": " + (sponsor ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
+            ChatUtility.normalBroadcast(Style.YELLOW + " Grace Period 3 minutes" + Style.GRAY + ": " + (gracePeriod3Minutes ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
+            ChatUtility.normalBroadcast(Style.YELLOW + " Team Fight" + Style.GRAY + ": " + (teamFight ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
+            ChatUtility.normalBroadcast("");
+            ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+        }
         time = gameConfig.getPregameTime();
         state = GameState.PreGame;
     }
@@ -275,7 +318,9 @@ public class GameTask {
     private void onLiveGame() {
         for(GamePlayer gamePlayer : gamePlayers){
             gamePlayer.stopFreezingTask();
-            gamePlayer.getPlayerData().updatePlayed(1);
+            if(!gameConfig.isCustomSG()) {
+                gamePlayer.getPlayerData().updatePlayed(1);
+            }
             gamePlayer.getPlayer().playSound(gamePlayer.getPlayer().getLocation(), Sound.NOTE_PIANO, 2, 2);
         }
         BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 40);
@@ -351,10 +396,12 @@ public class GameTask {
             }
             playerHealths.sort(new HealthComparator());
             winner = playerHealths.get(0).getGamePlayer();
-            winner.getPlayerData().updateWin(1);
             ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
-            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
-                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
+            if(!HSG.getGameTask().getGameConfig().isCustomSG()) {
+                winner.getPlayerData().updateWin(1);
+                ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                        + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for won the game!");
+            }
         }
 
         if(countAlive() == 2){
@@ -365,10 +412,12 @@ public class GameTask {
             }
             playerHealths.sort(new HealthComparator());
             winner = playerHealths.get(0).getGamePlayer();
-            winner.getPlayerData().updateWin(1);
             ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
-            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
-                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
+            if(!HSG.getGameTask().getGameConfig().isCustomSG()) {
+                winner.getPlayerData().updateWin(1);
+                ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                        + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for won the game!");
+            }
         }
 
         if(countAlive() == 1) {
@@ -379,10 +428,12 @@ public class GameTask {
                 }
             }
             winner = a.get(0);
-            winner.getPlayerData().updateWin(1);
             ChatUtility.broadcast(HotsCore.getHotsPlayer(winner.getPlayer()).getColorName() + ChatColor.GREEN + " has won the Survival Games!");
-            ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
-                    + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA  + " points for won the game!");
+            if (!HSG.getGameTask().getGameConfig().isCustomSG()) {
+                winner.getPlayerData().updateWin(1);
+                ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
+                        + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for won the game!");
+            }
         }
         
         Bukkit.getWorld(getCurrentMap().getName()).setTime(18000);
@@ -418,7 +469,11 @@ public class GameTask {
         if(gameConfig.isCustomSG()){
             BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 25);
             host = null;
+            sponsor = false;
+            gracePeriod3Minutes = false;
+            teamFight = false;
             HSG.getInstance().getWhitelistedPlayers().clear();
+            HSG.getInstance().getObserverPlayers().clear();
         } else {
             BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 24);
         }
@@ -430,13 +485,37 @@ public class GameTask {
      *
      */
     private void tickCustomSGLobby(){
-        int online = getCustomSGPlayers().size();
         if (timerFlag) {
-            //人数が既定の人数より少なくなってしまったら
-            if (online < gameConfig.getStartPlayerSize()) {
+            if(!hostWithPlay) {
+                if (getCustomSGPlayers().size() < gameConfig.getStartPlayerSize()) {
+                    setTimerFlag(false);
+                    setTime(gameConfig.getLobbyTime());
+                    ChatUtility.broadcast(ChatColor.RED + "Not enough players stopping countdown.");
+                }
+            }
+            else if(getGamePlayers().size() < gameConfig.getStartPlayerSize()){
                 setTimerFlag(false);
                 setTime(gameConfig.getLobbyTime());
                 ChatUtility.broadcast(ChatColor.RED + "Not enough players stopping countdown.");
+            }
+            if(HSG.getGameTask().isTeamFight()) {
+                if(hostWithPlay) {
+                    for (GamePlayer gamePlayer : HSG.getGameTask().getGamePlayers()) {
+                        if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
+                            setTimerFlag(false);
+                            setTime(gameConfig.getLobbyTime());
+                            ChatUtility.broadcast(Style.RED + "Countdown has been stopped because require to join all players are belonging to any team.");
+                        }
+                    }
+                }else{
+                    for (GamePlayer gamePlayer : HSG.getGameTask().getCustomSGPlayers()) {
+                        if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
+                            setTimerFlag(false);
+                            setTime(gameConfig.getLobbyTime());
+                            ChatUtility.broadcast(Style.RED + "Countdown has been stopped because require to join all players are belonging to any team.");
+                        }
+                    }
+                }
             }
         }
         if(time <= 5){
@@ -556,6 +635,17 @@ public class GameTask {
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until teleport to deathmatch.");
             return;
         }
+        if (time == 1620) {
+            if (isGracePeriod3Minutes()) {
+                setGracePeriod3Minutes(false);
+                ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+                ChatUtility.normalBroadcast(Style.PINK + Style.BOLD + "PvP" + Style.YELLOW + " has been Enabled!");
+                ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+                for(Player player : Bukkit.getServer().getOnlinePlayers()){
+                    player.playSound(player.getLocation(), Sound.WITHER_SPAWN, 0.5F, 1);
+                }
+            }
+        }
         //Chest Refill
         //17分
         if (time == 1020) {
@@ -628,19 +718,70 @@ public class GameTask {
         ChatUtility.sendMessage(player, Style.YELLOW + "You currently are the host.");
         GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
         gamePlayer.setHotbar(PlayerHotbar.CUSTOMSG_HOST_LOBBY);
-        gamePlayer.enableWatching();
+        if(!hostWithPlay) {
+            HSG.getGameTask().getGamePlayer(player).enableWatching();
+        }
         player.getInventory().setItem(0, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Sword", Material.STONE_SWORD, true));
         player.getInventory().setItem(1, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Rod", Material.FISHING_ROD, true));
         player.updateInventory();
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF("CustomSG-Update-Host");
+        out.writeUTF(HSG.getSettings().getServerName());
+        out.writeUTF(player.getName());
+        player.sendPluginMessage(HSG.getInstance(), "BungeeCord", out.toByteArray());
     }
 
     public List<GamePlayer> getCustomSGPlayers(){
         List<GamePlayer> toReturn = new ArrayList<>();
         for(GamePlayer gamePlayer : gamePlayers){
-            if(gamePlayer.getPlayer().getUniqueId() != host){
-                toReturn.add(gamePlayer);
+            if(!hostWithPlay){
+                if(gamePlayer.getPlayer().getUniqueId() != host && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())){
+                    toReturn.add(gamePlayer);
+                }
+            }else{
+                if(!HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())){
+                    toReturn.add(gamePlayer);
+                }
             }
         }
         return toReturn;
+    }
+
+    public TeamType getPlayerTeam(GamePlayer gamePlayer){
+        for(GameTeam gameTeam : teams){
+            for(GamePlayer teamPlayer : gameTeam.getPlayers()){
+                if(teamPlayer.getUUID().equals(gamePlayer.getUUID())){
+                    return gameTeam.getTeamType();
+                }
+            }
+        }
+        return null;
+    }
+
+    public void resetTeams(){
+        for(GameTeam gameTeam : teams){
+            gameTeam.removeAllPlayer();
+        }
+        teams = new GameTeam[2];
+        teams[0] = new GameTeam(TeamType.AQUA);
+        teams[1] = new GameTeam(TeamType.RED);
+    }
+
+    public GameTeam getGameTeam(TeamType teamType){
+        for(GameTeam team : teams){
+            if(team.getTeamType() == teamType){
+                return team;
+            }
+        }
+        return null;
+    }
+
+    public GameTeam getOpponentTeam(TeamType teamType){
+        for(GameTeam gameTeam : teams){
+            if(gameTeam.getTeamType() != teamType){
+                return gameTeam;
+            }
+        }
+        return null;
     }
 }
