@@ -241,7 +241,7 @@ public class GameTask {
     }
 
     private void teleportToSpawnCustomSG() {
-        if(hostWithPlay){
+        if(!hostWithPlay){
             Player hostPlayer = Bukkit.getPlayer(host);
             if(hostPlayer != null){
                 hostPlayer.teleport(currentMap.getDefaultSpawn());

@@ -130,7 +130,6 @@ public class HostManagerMenu extends Menu {
                 @Override
                 public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
                     player.closeInventory();
-
                     if (Bukkit.getServer().getOnlinePlayers().length >= 25) {
                         ChatUtility.sendMessage(player, Style.RED + "Server is fully... Can't be changed " + Style.LIGHT_PURPLE + Style.BOLD + "Host with play");
                         return;
