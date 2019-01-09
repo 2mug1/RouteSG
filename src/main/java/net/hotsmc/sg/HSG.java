@@ -11,10 +11,8 @@ import net.hotsmc.sg.database.MongoConfig;
 import net.hotsmc.sg.database.MongoConnection;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.listener.ListenerHandler;
-import net.hotsmc.sg.menu.HostManagerMenu;
-import net.hotsmc.sg.menu.SelectMapMenu;
-import net.hotsmc.sg.menu.SpectateMenu;
-import net.hotsmc.sg.menu.VoteMenu;
+import net.hotsmc.sg.menu.*;
+import net.hotsmc.sg.team.TeamType;
 import net.hotsmc.sg.utility.ItemUtility;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -26,6 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,6 +49,7 @@ public class HSG extends JavaPlugin {
     private SpectateMenu spectateMenu;
     private VoteMenu voteMenu;
     private SelectMapMenu selectMapMenu;
+    private PresetMenu presetMenu;
 
     private List<String> whitelistedPlayers;
     private List<String> observerPlayers;
@@ -73,6 +73,7 @@ public class HSG extends JavaPlugin {
             whitelistedPlayers = new ArrayList<>();
             observerPlayers = new ArrayList<>();
             selectMapMenu = new SelectMapMenu();
+            presetMenu = new PresetMenu();
         }
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
     }
@@ -101,6 +102,7 @@ public class HSG extends JavaPlugin {
         this.getCommand("roster").setExecutor(new RosterCommand());
         this.getCommand("team").setExecutor(new TeamCommand());
         this.getCommand("observer").setExecutor(new ObserverCommand());
+        this.getCommand("kt").setExecutor(new KillTotalCommand());
     }
 
     public static List<Player> getOnlinePlayers() {

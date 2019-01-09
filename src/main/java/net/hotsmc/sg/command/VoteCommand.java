@@ -16,34 +16,36 @@ public class VoteCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         if(commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if (label.equalsIgnoreCase("vote") || label.equalsIgnoreCase("v")) {
+            if (HSG.getGameTask().getGameConfig().isCustomSG()) {
+                ChatUtility.sendMessage(player, ChatColor.RED + "Custom SG.");
+                return true;
+            }
+            if (!HSG.getGameTask().getVoteManager().isVoting()) {
+                ChatUtility.sendMessage(player, ChatColor.RED + "Not voting.");
+                return true;
+            }
+            if (args.length == 0) {
+                HSG.getGameTask().getVoteManager().send(player);
+                return true;
+            }
+            if (args.length == 1) {
                 if (!HSG.getGameTask().getVoteManager().isVoting()) {
                     ChatUtility.sendMessage(player, ChatColor.RED + "Not voting.");
                     return true;
                 }
-                if(args.length == 0){
-                    HSG.getGameTask().getVoteManager().send(player);
-                    return true;
-                }
-                if (args.length == 1) {
-                    if (!HSG.getGameTask().getVoteManager().isVoting()) {
-                        ChatUtility.sendMessage(player, ChatColor.RED + "Not voting.");
-                        return true;
-                    }
-                    if (!NumberUtility.isNumber(args[0])) {
-                        ChatUtility.sendMessage(player, ChatColor.RED + "Please enter with a integer.");
-                    } else {
-                        GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
-                        int id = Integer.parseInt(args[0]);
-                        if(id < 1){
-                            ChatUtility.sendMessage(player, ChatColor.RED + "Please enter with between 1 and 5");
-                        }else {
-                            HSG.getGameTask().getVoteManager().addVote(gamePlayer, id);
-                        }
-                    }
+                if (!NumberUtility.isNumber(args[0])) {
+                    ChatUtility.sendMessage(player, ChatColor.RED + "Please enter with a integer.");
                 } else {
-                    ChatUtility.sendMessage(player, ChatColor.RED + "/vote # | /v #");
+                    GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
+                    int id = Integer.parseInt(args[0]);
+                    if (id < 1) {
+                        ChatUtility.sendMessage(player, ChatColor.RED + "Please enter with between 1 and 5");
+                    } else {
+                        HSG.getGameTask().getVoteManager().addVote(gamePlayer, id);
+                    }
                 }
+            } else {
+                ChatUtility.sendMessage(player, ChatColor.RED + "/vote # | /v #");
             }
         }
         return true;

@@ -8,8 +8,38 @@ import org.bukkit.ChatColor;
 @Getter
 @AllArgsConstructor
 public enum TeamType {
-    RED(Style.WHITE + "[" + Style.RED + "R" + Style.WHITE + "] " + Style.RED,"" +  ChatColor.RED + ChatColor.BOLD + "RED"), AQUA(Style.WHITE + "[" + Style.AQUA + "A" + Style.WHITE + "] " + Style.AQUA, "" + ChatColor.AQUA + ChatColor.BOLD + "AQUA");
+    RED(
+            ChatColor.WHITE + "[" + ChatColor.RED + "R" + ChatColor.WHITE + "] " + ChatColor.RED,
+            "" +  ChatColor.RED + ChatColor.BOLD + "RED",
+            new String[]{
+                    ChatColor.GRAY + Style.BOLD + "▓▓▓▓▓▓▓▓▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.RED + Style.BOLD + "▓▓▓▓▓" + ChatColor.GRAY + Style.BOLD +  "▓▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.RED + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.RED + ChatColor.BOLD + "▓" + Style.BOLD + ChatColor.GRAY + Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.RED + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.RED + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.RED + Style.BOLD +"▓▓▓▓▓" + ChatColor.GRAY +Style.BOLD + "▓▓▓",
+                    ChatColor.GRAY +Style.BOLD + "▓▓" + ChatColor.RED + Style.BOLD +"▓" + ChatColor.GRAY + Style.BOLD +"▓" + ChatColor.RED + Style.BOLD +"▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓▓ " + ChatColor.RED + ChatColor.BOLD + "RED " + ChatColor.WHITE + " has been destroyed!",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.RED +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓" + ChatColor.RED +Style.BOLD + "▓"  + ChatColor.GRAY + Style.BOLD + "▓▓▓▓",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.RED +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓▓" + ChatColor.RED +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓▓",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.RED +Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD +"▓▓▓▓" + ChatColor.RED +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓",
+                    ChatColor.GRAY +Style.BOLD + "▓▓▓▓▓▓▓▓▓▓",
+            }),
+    AQUA(
+            ChatColor.WHITE + "[" + ChatColor.AQUA + "A" + ChatColor.WHITE + "] " + ChatColor.AQUA,
+            "" + ChatColor.AQUA + ChatColor.BOLD + "AQUA",
+            new String[]{
+                    ChatColor.GRAY +Style.BOLD + "▓▓▓▓▓▓▓▓▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓▓" + ChatColor.AQUA + Style.BOLD + "▓▓▓▓" + Style.GRAY + Style.BOLD + "▓▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.AQUA + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.AQUA + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.AQUA + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.AQUA + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓" + ChatColor.AQUA + Style.BOLD + "▓▓▓▓▓▓" + ChatColor.GRAY + Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.AQUA + Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.AQUA + Style.BOLD +"▓" + ChatColor.GRAY + Style.BOLD +"▓▓ " + ChatColor.AQUA + ChatColor.BOLD + "AQUA " + ChatColor.WHITE + " has been destroyed!",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.AQUA +Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.AQUA + Style.BOLD +"▓" + ChatColor.GRAY + Style.BOLD +"▓▓",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.AQUA +Style.BOLD + "▓" + ChatColor.GRAY + Style.BOLD + "▓▓▓▓" + ChatColor.AQUA +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD +"▓▓" + ChatColor.AQUA +Style.BOLD + "▓" + ChatColor.GRAY +Style.BOLD + "▓▓▓▓" + ChatColor.AQUA + Style.BOLD +"▓" + ChatColor.GRAY +Style.BOLD + "▓▓",
+                    ChatColor.GRAY + Style.BOLD + "▓▓▓▓▓▓▓▓▓▓",
+            });
 
     private String prefix;
     private String displayName;
+    private String[] logo;
 }

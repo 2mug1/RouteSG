@@ -16,10 +16,6 @@ public class HostCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if(HotsCore.getHotsPlayer(player).getPlayerRank().getPermissionLevel() < PlayerRank.Diamond.getPermissionLevel()){
-                player.sendMessage(Style.RED + "You don't have permission.");
-                return true;
-            }
             final GameTask game = HSG.getGameTask();
             if(!game.getGameConfig().isCustomSG()){
                 player.sendMessage(Style.RED + "This server isn't custom sg.");

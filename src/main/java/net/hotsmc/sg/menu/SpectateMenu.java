@@ -3,6 +3,7 @@ package net.hotsmc.sg.menu;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.menu.Button;
 import net.hotsmc.core.gui.menu.Menu;
+import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.GamePlayer;
 import net.hotsmc.sg.utility.ChatUtility;
@@ -44,7 +45,7 @@ public class SpectateMenu extends Menu {
                 buttons.put(i, new Button() {
                     @Override
                     public ItemStack getButtonItem(Player player) {
-                        return ItemUtility.createPlayerSkull(gamePlayer.getPlayer().getName(), HotsCore.getHotsPlayer(gamePlayer.getPlayer()).getColorName());
+                        return ItemUtility.createPlayerSkull(gamePlayer.getPlayer().getName(), gamePlayer.getSGName(), Style.WHITE + HSG.getGameTask().getGamePlayerData(gamePlayer.getName()).getKills() + Style.GRAY + " kills");
                     }
                     @Override
                     public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
@@ -56,7 +57,7 @@ public class SpectateMenu extends Menu {
                             ChatUtility.sendMessage(player, ChatColor.RED + "That player is spectator.");
                         } else {
                             player.teleport(gamePlayer.getPlayer());
-                            ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + HotsCore.getHotsPlayer(gamePlayer.getPlayer()).getColorName());
+                            ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + (gamePlayer.getInTeam() == null ? HotsCore.getHotsPlayer(gamePlayer.getPlayer()).getColorName() : gamePlayer.getInTeam().getPrefix() + gamePlayer.getName()));
                         }
                     }
                 });

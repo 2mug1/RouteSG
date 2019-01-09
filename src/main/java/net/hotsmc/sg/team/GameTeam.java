@@ -68,4 +68,5 @@ public class GameTeam {
         }
         players.clear();
     }
+
 }

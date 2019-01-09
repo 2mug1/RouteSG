@@ -46,11 +46,7 @@ public class GiveHostCommand implements CommandExecutor {
                         return true;
                     }
                     GamePlayer old = HSG.getGameTask().getGamePlayer(player);
-                    if(!HSG.getGameTask().isHostWithPlay()) {
-                        old.enableWatching();
-                    }else{
-                        old.disableWatching();
-                    }
+                    old.disableWatching();
                     old.setHotbar(PlayerHotbar.LOBBY);
                     player.getInventory().setItem(0, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Sword", Material.STONE_SWORD, true));
                     player.getInventory().setItem(1, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Rod", Material.FISHING_ROD, true));
@@ -61,7 +57,7 @@ public class GiveHostCommand implements CommandExecutor {
                     target.sendMessage(Style.YELLOW + "Change Host: /givehost <player>");
                     target.sendMessage(Style.YELLOW + "Show Roster: /roster");
                     target.sendMessage(Style.YELLOW + "Add Observer: /observer <player1> <player2> <player3>...");
-                    player.sendMessage(Style.YELLOW + "/team <team> <player1> <player2> <player3>...");
+                    player.sendMessage(Style.YELLOW + "Add to team: /team <team> <player1> <player2> <player3>...");
                     player.sendMessage(Style.YELLOW + "Teams: " + Style.AQUA + "AQUA" + Style.GRAY + ", " + Style.RED + "RED");
                 }
             }

@@ -98,7 +98,7 @@ public enum PlayerHotbar {
                     ChatUtility.sendMessage(player, ChatColor.RED + "You are not host.");
                     return;
                 }
-                new HostManagerMenu().openMenu(player, 9);
+                new HostManagerMenu().openMenu(player, 18);
             }
         };
         items[5] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {

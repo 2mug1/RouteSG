@@ -1,6 +1,6 @@
 name: HotsSG
 main: net.hotsmc.sg.HSG
-version: 1.0
+version: 2.0
 softdepend: [HotsCore]
 commands:
   hsg:
@@ -20,3 +20,4 @@ commands:
   roster:
   team:
   observer:
+  kt:

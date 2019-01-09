@@ -19,7 +19,10 @@ public class StrikeLightningTask extends BukkitRunnable {
             return;
         }
         Location location = player.getLocation();
-        if (location == null) return;
+        if (location == null) {
+            cancel();
+            return;
+        }
         if (location.distance(HSG.getGameTask().getCurrentMap().getCenterLocation()) > HSG.getGameTask().getCircleSize()) {
             player.getLocation().getWorld().strikeLightning(player.getLocation());
         }

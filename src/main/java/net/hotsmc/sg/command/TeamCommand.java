@@ -61,7 +61,10 @@ public class TeamCommand implements CommandExecutor {
                 }
                 //現在参加しているチームがあったら
                 else if (HSG.getGameTask().getGamePlayer(target).getInTeam() != null) {
-                    HSG.getGameTask().getGamePlayer(target).getInTeam().getPlayers().remove(HSG.getGameTask().getGamePlayer(target));
+                    GameTeam team = HSG.getGameTask().getGamePlayer(target).getInTeam();
+                    String teamName = team.getTeamType().getDisplayName();
+                    team.getPlayers().remove(HSG.getGameTask().getGamePlayer(target));
+                    player.sendMessage(Style.YELLOW + name + Style.WHITE + " has been removed from " + teamName);
                     gameTeam.addPlayer(HSG.getGameTask().getGamePlayer(target));
                     player.sendMessage(Style.YELLOW + name + Style.WHITE + " has been added to " + teamType.getDisplayName());
                 } else {

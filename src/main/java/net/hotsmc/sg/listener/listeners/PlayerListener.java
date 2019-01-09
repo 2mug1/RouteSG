@@ -10,15 +10,14 @@ import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.hotbar.PlayerHotbar;
+import net.hotsmc.sg.team.TeamType;
 import net.hotsmc.sg.utility.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
@@ -36,6 +35,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class PlayerListener implements Listener {
@@ -92,12 +92,9 @@ public class PlayerListener implements Listener {
                                             "UUID", event.getUniqueId().toString())).first()).getString(
                             "RANK"));
 
-            //最初にサーバーに入るDiamondランク以上のプレイヤーのログイン処理
             //Lobby状態でサーバーのプレイヤー数が0人でホストがいなかったらログイン許可
             if (state == GameState.Lobby && Bukkit.getServer().getOnlinePlayers().length < 1 && game.getHost() == null) {
-                if (playerRank.getPermissionLevel() >= PlayerRank.Diamond.getPermissionLevel()) {
-                    return;
-                }
+                return;
             }
 
             if(state == GameState.Lobby) {
@@ -105,8 +102,10 @@ public class PlayerListener implements Listener {
                     event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "You are not registered to roster.");
                 }
             }else {
-                if(playerRank.getPermissionLevel() < PlayerRank.Gold.getPermissionLevel()) {
-                    event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "You are not registered to roster.");
+                if(game.isSpectateRosterOnly()) {
+                    if (!HSG.getInstance().getWhitelistedPlayers().contains(event.getName().toLowerCase())) {
+                        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "Roster only to spectate.");
+                    }
                 }
             }
         }
@@ -144,7 +143,7 @@ public class PlayerListener implements Listener {
                     player.sendMessage(Style.YELLOW + "Change Host: /givehost <player>");
                     player.sendMessage(Style.YELLOW + "Show Roster: /roster");
                     player.sendMessage(Style.YELLOW + "Add Observer: /observer <player1> <player2> <player3>...");
-                    player.sendMessage(Style.YELLOW + "/team <team> <player1> <player2> <player3>...");
+                    player.sendMessage(Style.YELLOW + "Add to team: /team <team> <player1> <player2> <player3>...");
                     player.sendMessage(Style.YELLOW + "Teams: " + Style.AQUA + "AQUA" + Style.GRAY + ", " + Style.RED + "RED");
                 }
                 if(HSG.getInstance().getObserverPlayers().contains(player.getName().toLowerCase())){
@@ -204,6 +203,7 @@ public class PlayerListener implements Listener {
                     gameTask.setSponsor(false);
                     gameTask.setGracePeriod3Minutes(false);
                     gameTask.setTeamFight(false);
+                    gameTask.setSpectateRosterOnly(false);
                     HSG.getInstance().getWhitelistedPlayers().clear();
                     HSG.getInstance().getObserverPlayers().clear();
                     for (Player all : Bukkit.getServer().getOnlinePlayers()) {
@@ -226,7 +226,13 @@ public class PlayerListener implements Listener {
         }
 
         //生きているプレイヤーだったら
+
         if (!gamePlayer.isWatching()) {
+            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(gamePlayer.getName());
+            if(gamePlayerData != null) {
+                gamePlayerData.setAlive(false);
+                gamePlayerData.applyPlaceRank();
+            }
             if (state == GameState.PreGame) {
                 Location location = player.getLocation();
                 location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
@@ -322,7 +328,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
         GameTask gameTask = HSG.getGameTask();
-        if (gameTask.getState() == GameState.Lobby) {
+        if (gameTask.getGamePlayer(event.getPlayer()).isWatching() || gameTask.getState() == GameState.Lobby) {
             event.setCancelled(true);
         }
     }
@@ -365,42 +371,47 @@ public class PlayerListener implements Listener {
     public void onDamageByEntity(EntityDamageByEntityEvent event) {
         GameTask gameTask = HSG.getGameTask();
         GameState state = gameTask.getState();
-        if(state == GameState.Lobby){
-            if (event.getDamager() instanceof FishHook && ((FishHook) event.getDamager()).getShooter() instanceof Player) {
-                Player damager = (Player) ((FishHook) event.getDamager()).getShooter();
-                GamePlayer damagerGP = gameTask.getGamePlayer(damager);
+        if (event.getDamager() instanceof FishHook && ((FishHook) event.getDamager()).getShooter() instanceof Player) {
+            Player damager = (Player) ((FishHook) event.getDamager()).getShooter();
+            GamePlayer damagerGP = gameTask.getGamePlayer(damager);
+            Player damaged = (Player) event.getEntity();
+            GamePlayer damagedGP = gameTask.getGamePlayer(damaged);
+            if(state == GameState.Lobby) {
                 if (!damagerGP.getPlayerData().isLobbyPvP()) {
                     event.setCancelled(true);
                     return;
                 }
-                Player damaged = (Player) event.getEntity();
-                GamePlayer damagedGP = gameTask.getGamePlayer(damaged);
                 if (!damagedGP.getPlayerData().isLobbyPvP()) {
                     event.setCancelled(true);
                     return;
                 }
-                double horizontalMultiplier = HSG.getSettings().getFisihingrod_horizontalMultiplier();
-                double verticalMultiplier = HSG.getSettings().getFisihingrod_verticalMultiplier();
-                double sprintMultiplier = damager.isSprinting() ? 0.8D : 0.5D;
-                double kbMultiplier = damager.getItemInHand() == null ? 0.0D : damager.getItemInHand().getEnchantmentLevel(Enchantment.KNOCKBACK) * 0.2D;
-
-                double airMultiplier = damaged.isOnGround() ? 1.0D : 0.5D;
-
-                Vector knockback = damaged.getLocation().toVector().subtract(damager.getLocation().toVector()).normalize();
-                knockback.setX((knockback.getX() * sprintMultiplier + kbMultiplier) * horizontalMultiplier);
-                knockback.setY(0.35D * airMultiplier * verticalMultiplier);
-                knockback.setZ((knockback.getZ() * sprintMultiplier + kbMultiplier) * horizontalMultiplier);
-                try
-                {
-                    Object entityPlayer = damaged.getClass().getMethod("getHandle", new Class[0]).invoke(damaged, new Object[0]);
-                    Object playerConnection = this.fieldPlayerConnection.get(entityPlayer);
-                    Object packet = this.packetVelocity.newInstance(new Object[] { Integer.valueOf(damaged.getEntityId()), Double.valueOf(knockback.getX()), Double.valueOf(knockback.getY()), Double.valueOf(knockback.getZ()) });
-                    this.sendPacket.invoke(playerConnection, new Object[] { packet });
+            }
+            if(state != GameState.Lobby){
+                if(HSG.getGameTask().isGracePeriod3Minutes()){
+                    if (gameTask.getTime() > 1620) {
+                        event.setCancelled(true);
+                        return;
+                    }
                 }
-                catch (SecurityException|IllegalArgumentException|IllegalAccessException| InvocationTargetException |NoSuchMethodException|InstantiationException e)
-                {
-                    e.printStackTrace();
-                }
+            }
+            double horizontalMultiplier = HSG.getSettings().getFisihingrod_horizontalMultiplier();
+            double verticalMultiplier = HSG.getSettings().getFisihingrod_verticalMultiplier();
+            double sprintMultiplier = damager.isSprinting() ? 0.8D : 0.5D;
+            double kbMultiplier = damager.getItemInHand() == null ? 0.0D : damager.getItemInHand().getEnchantmentLevel(Enchantment.KNOCKBACK) * 0.2D;
+
+            double airMultiplier = damaged.isOnGround() ? 1.0D : 0.5D;
+
+            Vector knockback = damaged.getLocation().toVector().subtract(damager.getLocation().toVector()).normalize();
+            knockback.setX((knockback.getX() * sprintMultiplier + kbMultiplier) * horizontalMultiplier);
+            knockback.setY(0.35D * airMultiplier * verticalMultiplier);
+            knockback.setZ((knockback.getZ() * sprintMultiplier + kbMultiplier) * horizontalMultiplier);
+            try {
+                Object entityPlayer = damaged.getClass().getMethod("getHandle", new Class[0]).invoke(damaged, new Object[0]);
+                Object playerConnection = this.fieldPlayerConnection.get(entityPlayer);
+                Object packet = this.packetVelocity.newInstance(new Object[]{Integer.valueOf(damaged.getEntityId()), Double.valueOf(knockback.getX()), Double.valueOf(knockback.getY()), Double.valueOf(knockback.getZ())});
+                this.sendPacket.invoke(playerConnection, new Object[]{packet});
+            } catch (SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | InstantiationException e) {
+                e.printStackTrace();
             }
         }
         if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
@@ -412,9 +423,9 @@ public class PlayerListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            if(state == GameState.LiveGame){
-                if(gameTask.isGracePeriod3Minutes()){
-                    if(gameTask.getTime() > 1620){
+            if (state == GameState.LiveGame) {
+                if (gameTask.isGracePeriod3Minutes()) {
+                    if (gameTask.getTime() > 1620) {
                         event.setCancelled(true);
                         ChatUtility.sendMessage(damager, Style.RED + "PvP is disabled. Will be enabled in 27:00.");
                         return;
@@ -481,12 +492,19 @@ public class PlayerListener implements Listener {
         if(gameTask.isTeamFight()){
             if(gameTask.getGamePlayer(dead).getInTeam() != null) {
                 gameTask.getGamePlayer(dead).setAlive(false);
-                if(gameTask.getGamePlayer(dead).getInTeam().getAlivePlayers().size() <= 0){
-                    ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-                    ChatUtility.normalBroadcast(gameTask.getGamePlayer(dead).getInTeam().getTeamType().getDisplayName() + Style.YELLOW + " has been destroyed!");
-                    ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+                if(gameTask.getGamePlayer(dead).getInTeam().getAlivePlayers().size() <= 0) {
+                    if (gameTask.getGamePlayer(dead).getInTeam().getTeamType() == TeamType.RED) {
+                        for (String red : TeamType.RED.getLogo()) {
+                            ChatUtility.normalBroadcast(red);
+                        }
+                    } else if (gameTask.getGamePlayer(dead).getInTeam().getTeamType() == TeamType.AQUA) {
+                        for (String aqua : TeamType.AQUA.getLogo()) {
+                            ChatUtility.normalBroadcast(aqua);
+                        }
+                    }
                     for(Player player1 : Bukkit.getServer().getOnlinePlayers()){
-                        player1.playSound(player1.getLocation(), Sound.WITHER_SPAWN, 0.5F, 1);
+                        player1.playSound(player1.getLocation(), Sound.ENDERDRAGON_DEATH, 1F, 1);
+                        killer.getLocation().getWorld().createExplosion(killer.getLocation(), 2, false);
                     }
                 }
             }
@@ -504,7 +522,7 @@ public class PlayerListener implements Listener {
                 ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
                 deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             }
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
 
             deadGP.respawn();
 
@@ -527,6 +545,13 @@ public class PlayerListener implements Listener {
                 dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
 
+            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(dead.getName());
+            gamePlayerData.setAlive(false);
+            gamePlayerData.applyPlaceRank();
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
+            dead.sendMessage(Style.AQUA + "You have been placed #" + gamePlayerData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
+
             return;
         }
         //自滅の場合②
@@ -539,7 +564,7 @@ public class PlayerListener implements Listener {
             e.setDroppedExp(0);
             ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
 
             deadGP.respawn();
 
@@ -561,12 +586,37 @@ public class PlayerListener implements Listener {
                 deadGP.setOpeningChest(null);
                 dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
+
+            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(dead.getName());
+            gamePlayerData.setAlive(false);
+            gamePlayerData.applyPlaceRank();
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
+            dead.sendMessage(Style.AQUA + "You have been placed #" + gamePlayerData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
         } else {
             Location location = dead.getLocation();
             location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             GamePlayer deadGP = gameTask.getGamePlayer(dead);
             deadGP.setWatching(true);
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
+
+            GamePlayerData deadData = HSG.getGameTask().getGamePlayerData(killer.getName());
+            deadData.setAlive(false);
+            deadData.applyPlaceRank();
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
+            dead.sendMessage(Style.AQUA + "You have been placed #" + deadData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
+            dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
+
+            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(killer.getName());
+            gamePlayerData.addKill();
+            killer.sendMessage(Style.AQUA + "You have " + gamePlayerData.getKills() + " kills.");
+
+            HSG.getGameTask().getGamePlayerData().sort(new Comparator<GamePlayerData>() {
+                public int compare(GamePlayerData o1, GamePlayerData o2) {
+                    return o1.getKills() > o2.getKills() ? -1 : 1;
+                }
+            });
+
             if(!gameTask.getGameConfig().isCustomSG()) {
                 killerGP.getPlayerData().updateKill(1);
 
@@ -583,7 +633,7 @@ public class PlayerListener implements Listener {
             }
             deadGP.setRespawnLocation(dead.getLocation());
             e.setDroppedExp(0);
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(dead).getColorName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
 
             deadGP.respawn();
 
@@ -616,12 +666,21 @@ public class PlayerListener implements Listener {
         GameState state = gameTask.getState();
         GamePlayer gamePlayer = gameTask.getGamePlayer(event.getPlayer());
         if (gamePlayer == null) return;
+        Block block = event.getBlock();
+        if(block.getType() == Material.BOAT){
+            Block substract = block.getLocation().subtract(0, 1, 0).getBlock();
+            if(substract.getType() != Material.WATER ||substract.getType() != Material.WATER_LILY){
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         if (gamePlayer.isWatching()) {
             event.setCancelled(true);
             return;
         }
         if (state == GameState.LiveGame || state == GameState.DeathMatch) {
-            if (event.getBlock().getType() == Material.FIRE || event.getBlock().getType() == Material.CAKE) {
+            if (block.getType() == Material.FIRE || block.getType() == Material.CAKE) {
                 return;
             }
         }
@@ -656,6 +715,9 @@ public class PlayerListener implements Listener {
     public void onCraft(CraftItemEvent event) {
         if (event.getRecipe().getResult().getType() == Material.FLINT_AND_STEEL) {
             event.setCurrentItem(ItemUtility.createFlintAndSteel());
+        }
+        else if(event.getRecipe().getResult().getType() == Material.BUCKET){
+            event.setCancelled(true);
         }
     }
 

@@ -19,7 +19,7 @@ public class PlayerFreezingTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if(HSG.getGameTask().getGamePlayer(player).isWatching() || !player.isOnline() || player == null || HSG.getGameTask().getState() != GameState.PreGame && HSG.getGameTask().getState() != GameState.PreDeathmatch ){
+        if(player == null || HSG.getGameTask().getGamePlayer(player).isWatching() || !player.isOnline() || HSG.getGameTask().getState() != GameState.PreGame && HSG.getGameTask().getState() != GameState.PreDeathmatch ){
             this.cancel();
             return;
         }

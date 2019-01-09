@@ -247,4 +247,8 @@ public class GamePlayer {
         }
         return null;
     }
+
+    public String getSGName(){
+        return getInTeam() == null ? HotsCore.getHotsPlayer(player).getColorName() : getInTeam().getPrefix() + getName();
+    }
 }
