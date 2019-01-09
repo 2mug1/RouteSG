@@ -1,0 +1,23 @@
+name: HotsSG
+main: net.hotsmc.sg.HSG
+version: 2.0
+softdepend: [HotsCore]
+commands:
+  hsg:
+  spec:
+  stats:
+  sponsor:
+  list:
+    aliases: [l]
+  vote:
+    aliases: [v]
+  gf:
+  host:
+  givehost:
+  register:
+  unregister:
+  frkbreload:
+  roster:
+  team:
+  observer:
+  kt:
