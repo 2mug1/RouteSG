@@ -102,6 +102,10 @@ public class PlayerListener implements Listener {
                     event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "You are not registered to roster.");
                 }
             }else {
+                if(playerRank.getPermissionLevel() >= PlayerRank.Gold.getPermissionLevel()){
+                    return;
+                }
+
                 if(game.isSpectateRosterOnly()) {
                     if (!HSG.getInstance().getWhitelistedPlayers().contains(event.getName().toLowerCase())) {
                         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "Roster only to spectate.");
@@ -504,7 +508,7 @@ public class PlayerListener implements Listener {
                     }
                     for(Player player1 : Bukkit.getServer().getOnlinePlayers()){
                         player1.playSound(player1.getLocation(), Sound.ENDERDRAGON_DEATH, 1F, 1);
-                        killer.getLocation().getWorld().createExplosion(killer.getLocation(), 2, false);
+                        killer.getLocation().getWorld().createExplosion(killer.getLocation().getX(), killer.getLocation().getY(), killer.getLocation().getZ(), 2F, false, false);
                     }
                 }
             }

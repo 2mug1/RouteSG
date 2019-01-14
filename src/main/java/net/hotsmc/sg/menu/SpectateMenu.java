@@ -57,7 +57,7 @@ public class SpectateMenu extends Menu {
                             ChatUtility.sendMessage(player, ChatColor.RED + "That player is spectator.");
                         } else {
                             player.teleport(gamePlayer.getPlayer());
-                            ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + (gamePlayer.getInTeam() == null ? HotsCore.getHotsPlayer(gamePlayer.getPlayer()).getColorName() : gamePlayer.getInTeam().getPrefix() + gamePlayer.getName()));
+                            ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + gamePlayer.getSGName());
                         }
                     }
                 });

@@ -40,7 +40,7 @@ public class SelectMapMenu extends Menu {
                 public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
                     player.closeInventory();
                     HSG.getGameTask().setCurrentMap(mapData);
-                    ChatUtility.sendMessage(player, Style.YELLOW + "You have selected " + Style.AQUA + Style.BOLD + mapData.getName());
+                    ChatUtility.normalBroadcast(Style.YELLOW + "Selected " + Style.AQUA + Style.BOLD + mapData.getName());
                 }
             });
             slot++;

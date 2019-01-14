@@ -36,7 +36,7 @@ public class SpectateCommand implements CommandExecutor {
                     ChatUtility.sendMessage(player, ChatColor.RED + targetName + " isn't playing the game.");
                 }else{
                     player.teleport(target);
-                    ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + ChatColor.GREEN + targetName);
+                    ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + targetGP.getSGName());
                 }
                 return true;
             }else{
