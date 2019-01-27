@@ -1,19 +1,15 @@
 package net.hotsmc.sg.menu;
 
-import ca.wacos.nametagedit.NametagAPI;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.menu.Button;
 import net.hotsmc.core.gui.menu.Menu;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
-import net.hotsmc.sg.game.GameTask;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.reflection.BukkitReflection;
-import net.hotsmc.sg.team.GameTeam;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -33,7 +29,7 @@ public class HostManagerMenu extends Menu {
 
     @Override
     public String getTitle(Player player) {
-        return "Custom SG";
+        return Style.BLUE + Style.BOLD + "Settings";
     }
 
     @Override
@@ -53,24 +49,6 @@ public class HostManagerMenu extends Menu {
                     if (HSG.getGameTask().getCurrentMap() == null) {
                         ChatUtility.sendMessage(player, Style.RED + "You need to select a map.");
                         return;
-                    }
-
-                    if(HSG.getGameTask().isTeamFight()){
-                        if(HSG.getGameTask().isHostWithPlay()) {
-                            for (GamePlayer gamePlayer : HSG.getGameTask().getGamePlayers()) {
-                                if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
-                                    player.sendMessage(Style.RED + "Require to join all players are belonging to any team.");
-                                    return;
-                                }
-                            }
-                        }else{
-                            for (GamePlayer gamePlayer : HSG.getGameTask().getCustomSGPlayers()) {
-                                if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
-                                    player.sendMessage(Style.RED + "Require to join all players are belonging to any team.");
-                                    return;
-                                }
-                            }
-                        }
                     }
 
                     if (!HSG.getGameTask().isHostWithPlay()) {
@@ -111,6 +89,30 @@ public class HostManagerMenu extends Menu {
             });
         }
 
+        buttons.put(1, new Button() {
+            @Override
+            public ItemStack getButtonItem(Player player) {
+                return ItemUtility.createItemStack(Style.BLUE + Style.BOLD + "Maps", Material.EMPTY_MAP, false);
+            }
+
+            @Override
+            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
+                HSG.getInstance().getSelectMapMenu().openMenu(player);
+            }
+        });
+
+        buttons.put(2, new Button() {
+            @Override
+            public ItemStack getButtonItem(Player player) {
+                return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Grace Period", Material.WATCH, false);
+            }
+
+            @Override
+            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
+                new GracePeriodMenu().openMenu(player);
+            }
+        });
+
         buttons.put(4, new Button() {
             @Override
             public ItemStack getButtonItem(Player player) {
@@ -119,7 +121,18 @@ public class HostManagerMenu extends Menu {
             @Override
             public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
                 player.closeInventory();
-                HSG.getInstance().getPresetMenu().openMenu(player, 9);
+                HSG.getInstance().getPresetMenu().openMenu(player);
+            }
+        });
+
+        buttons.put(6, new Button() {
+            @Override
+            public ItemStack getButtonItem(Player player) {
+                return ItemUtility.createItemStack(Style.YELLOW + Style.BOLD + "Teams", Material.SKULL_ITEM, false);
+            }
+            @Override
+            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
+                HSG.getInstance().getTeamListMenu().openMenu(player, 54);
             }
         });
 
@@ -141,23 +154,21 @@ public class HostManagerMenu extends Menu {
                 for(String p : HSG.getInstance().getWhitelistedPlayers()){
                     roster.add(Style.GRAY + "- " +  Style.AQUA + p);
                 }
-                return ItemUtility.createItemStack(Style.YELLOW + Style.BOLD + Style.UNDER_LINE + "Roster", Material.PAPER, false, roster);
+                return ItemUtility.createItemStack(Style.YELLOW + Style.BOLD + Style.UNDER_LINE + "Roster", Material.BOOK, false, roster);
             }
         });
 
-        buttons.put(9, new Button() {
-            @Override
-            public ItemStack getButtonItem(Player player) {
-                return ItemUtility.createItemStack(Style.BLUE + Style.BOLD + "Maps", Material.EMPTY_MAP, false);
-            }
+        for(int i = 9; i < 18; i++){
+            buttons.put(i, new Button() {
+                @Override
+                public ItemStack getButtonItem(Player player) {
+                    return net.hotsmc.core.utility.ItemUtility.createGlassPane(" ", 1, 6);
+                }
+            });
+        }
 
-            @Override
-            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                HSG.getInstance().getSelectMapMenu().openMenu(player, 18);
-            }
-        });
         if (!HSG.getGameTask().isHostWithPlay()) {
-            buttons.put(10, new Button() {
+            buttons.put(21, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Host with Play: " + Style.RED + Style.BOLD + "Disabled", Material.GOLD_SWORD, false);
@@ -174,14 +185,10 @@ public class HostManagerMenu extends Menu {
                     HSG.getGameTask().getGamePlayer(player).disableWatching();
                     ChatUtility.sendMessage(player, Style.LIGHT_PURPLE + Style.BOLD + "Host with Play " + Style.GRAY + "has been " + Style.GREEN + Style.BOLD + "Enabled");
                     BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 24 + HSG.getInstance().getObserverPlayers().size());
-                    if(HSG.getGameTask().getGamePlayer(player).getInTeam() != null){
-                        HSG.getGameTask().getGamePlayer(player).getInTeam().getPlayers().remove(HSG.getGameTask().getGamePlayer(player));
-                        HotsCore.getHotsPlayer(player).updateNameTag();
-                    }
                 }
             });
         } else {
-            buttons.put(10, new Button() {
+            buttons.put(21, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Host with Play: " + Style.GREEN + Style.BOLD + "Enabled", Material.GOLD_SWORD, false);
@@ -199,7 +206,7 @@ public class HostManagerMenu extends Menu {
         }
 
         if(HSG.getGameTask().isSponsor()){
-            buttons.put(11, new Button() {
+            buttons.put(22, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Sponsor: " + Style.GREEN + Style.BOLD + "Enabled", Material.GOLD_AXE, false);
@@ -212,7 +219,7 @@ public class HostManagerMenu extends Menu {
                 }
             });
         }else{
-            buttons.put(11, new Button() {
+            buttons.put(22, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Sponsor: " + Style.RED + Style.BOLD + "Disabled", Material.GOLD_AXE, false);
@@ -226,66 +233,8 @@ public class HostManagerMenu extends Menu {
             });
         }
 
-        if(HSG.getGameTask().isGracePeriod3Minutes()){
-            buttons.put(12, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Grace Period 3 minutes: " + Style.GREEN + Style.BOLD + "Enabled", Material.WATCH, false);
-                }
-                @Override
-                public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                    player.closeInventory();
-                    HSG.getGameTask().setGracePeriod3Minutes(false);
-                    ChatUtility.sendMessage(player, Style.LIGHT_PURPLE + Style.BOLD + "Grace Period 3 minutes " + Style.GRAY + "has been " + Style.RED + Style.BOLD + "Disabled");
-                }
-            });
-        }else{
-            buttons.put(12, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Grace Period 3 minutes: " + Style.RED + Style.BOLD + "Disabled", Material.WATCH, false);
-                }
-                @Override
-                public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                    player.closeInventory();
-                    HSG.getGameTask().setGracePeriod3Minutes(true);
-                    ChatUtility.sendMessage(player, Style.LIGHT_PURPLE + Style.BOLD + "Grace Period 3 minutes " + Style.GRAY + "has been " + Style.GREEN + Style.BOLD + "Enabled");
-                }
-            });
-        }
-
-        if(HSG.getGameTask().isTeamFight()){
-            buttons.put(13, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Team Fight: " + Style.GREEN + Style.BOLD + "Enabled", Material.COAL, false);
-                }
-                @Override
-                public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                    player.closeInventory();
-                    HSG.getGameTask().setTeamFight(false);
-                    HSG.getGameTask().resetTeams();
-                    ChatUtility.sendMessage(player, Style.LIGHT_PURPLE + Style.BOLD + "Team Fight " + Style.GRAY + "has been " + Style.RED + Style.BOLD + "Disabled");
-                }
-            });
-        }else{
-            buttons.put(13, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Team Fight: " + Style.RED + Style.BOLD + "Disabled", Material.COAL, false);
-                }
-                @Override
-                public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                    player.closeInventory();
-                    HSG.getGameTask().setTeamFight(true);
-                    HSG.getGameTask().resetTeams();
-                    ChatUtility.sendMessage(player, Style.LIGHT_PURPLE + Style.BOLD + "Team Fight " + Style.GRAY + "has been " + Style.GREEN + Style.BOLD + "Enabled");
-                }
-            });
-        }
-
         if(HSG.getGameTask().isSpectateRosterOnly()){
-            buttons.put(14, new Button() {
+            buttons.put(23, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Spectate Roster Only: " + Style.GREEN + Style.BOLD + "Enabled", Material.COMPASS, false);
@@ -298,7 +247,7 @@ public class HostManagerMenu extends Menu {
                 }
             });
         }else{
-            buttons.put(14, new Button() {
+            buttons.put(23, new Button() {
                 @Override
                 public ItemStack getButtonItem(Player player) {
                     return ItemUtility.createItemStack(Style.LIGHT_PURPLE + Style.BOLD + "Spectate Roster Only: " + Style.RED + Style.BOLD + "Disabled", Material.COMPASS, false);

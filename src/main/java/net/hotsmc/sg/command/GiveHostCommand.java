@@ -1,10 +1,8 @@
 package net.hotsmc.sg.command;
 
-import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.other.Style;
-import net.hotsmc.core.player.PlayerRank;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.game.GameTask;
 import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.utility.ChatUtility;
@@ -52,13 +50,16 @@ public class GiveHostCommand implements CommandExecutor {
                     player.getInventory().setItem(1, ItemUtility.createItemStack(ChatColor.AQUA + "Lobby Rod", Material.FISHING_ROD, true));
                     game.updateHost(target);
                     ChatUtility.sendMessage(player, Style.YELLOW + "You've given host to " + Style.AQUA + name + "!");
-                    target.sendMessage(Style.YELLOW + "Add to roster: /register <player1> <player2> <player3>...");
-                    target.sendMessage(Style.YELLOW + "Remove from roster: /unregister <player>");
-                    target.sendMessage(Style.YELLOW + "Change Host: /givehost <player>");
-                    target.sendMessage(Style.YELLOW + "Show Roster: /roster");
-                    target.sendMessage(Style.YELLOW + "Add Observer: /observer <player1> <player2> <player3>...");
-                    player.sendMessage(Style.YELLOW + "Add to team: /team <team> <player1> <player2> <player3>...");
-                    player.sendMessage(Style.YELLOW + "Teams: " + Style.AQUA + "AQUA" + Style.GRAY + ", " + Style.RED + "RED");
+                    player.sendMessage(Style.HORIZONTAL_SEPARATOR);
+                    player.sendMessage(Style.YELLOW + Style.BOLD + " Host Help");
+                    player.sendMessage(Style.AQUA + " ホストする: /host");
+                    player.sendMessage(Style.AQUA + " プレイヤー登録: /register <player1> <player2> <player3>...");
+                    player.sendMessage(Style.AQUA + " プレイヤー削除: /unregister <player>");
+                    player.sendMessage(Style.AQUA + " ホスト変更: /givehost <player>");
+                    player.sendMessage(Style.AQUA + " 登録プレイヤー表示: /roster");
+                    player.sendMessage(Style.AQUA + " オブザーバー追加: /observer <player1> <player2> <player3>...");
+                    player.sendMessage(Style.AQUA + " 戦闘ログ確認: /fl");
+                    player.sendMessage(Style.HORIZONTAL_SEPARATOR);
                 }
             }
         }

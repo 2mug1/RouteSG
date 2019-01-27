@@ -1,6 +1,6 @@
 package net.hotsmc.sg.utility;
 
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 public class ChatUtility {
 
-    public static String PLUGIN_MESSAGE_PREFIX = "" + ChatColor.DARK_GRAY + ChatColor.BOLD + "» " + ChatColor.RESET;
+    public static String PLUGIN_MESSAGE_PREFIX = "" + ChatColor.DARK_GRAY + ChatColor.BOLD + " » " + ChatColor.RESET;
 
     private static String format(String message) {
         return PLUGIN_MESSAGE_PREFIX + message;

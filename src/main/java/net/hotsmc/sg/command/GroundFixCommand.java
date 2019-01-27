@@ -2,7 +2,7 @@ package net.hotsmc.sg.command;
 
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.utility.ChatUtility;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

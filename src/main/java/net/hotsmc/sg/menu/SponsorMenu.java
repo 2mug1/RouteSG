@@ -1,11 +1,10 @@
 package net.hotsmc.sg.menu;
 
-import lombok.AllArgsConstructor;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.menu.Button;
 import net.hotsmc.core.gui.menu.Menu;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ItemUtility;
 import org.bukkit.ChatColor;

@@ -1,7 +1,6 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.player;
 
 import lombok.Getter;
-import org.bukkit.entity.Player;
 
 @Getter
 public class PlayerHealth {

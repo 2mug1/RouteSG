@@ -26,7 +26,7 @@
             <version>1.7.10-R0.1-SNAPSHOT</version>
             <type>jar</type>
             <scope>system</scope>
-            <systemPath>G:/Desktop/HotsNetwork/maven/server.jar</systemPath>
+            <systemPath>C:/Users/IT/Desktop/HotsNetwork/maven/server.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>net.hotsmc.core</groupId>
@@ -34,7 +34,7 @@
             <version>1.0-SNAPSHOT</version>
             <type>jar</type>
             <scope>system</scope>
-            <systemPath>G:/Desktop/HotsNetwork/servers/Anni/plugins/HotsCore-1.0-SNAPSHOT-shaded.jar</systemPath>
+            <systemPath>C:/Users/IT/Desktop/HotsNetwork/servers/customsgtest/plugins/HotsCore-1.0-SNAPSHOT-shaded.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -59,7 +59,7 @@
             <version>4.1.0</version>
             <type>jar</type>
             <scope>system</scope>
-            <systemPath>G:/Desktop/HotsNetwork/maven/NametagEdit.jar</systemPath>
+            <systemPath>C:/Users/IT/Desktop/HotsNetwork/maven/NametagEdit.jar</systemPath>
         </dependency>
     </dependencies>
 
@@ -93,7 +93,7 @@
                         </goals>
                         <configuration>
                             <finalName>${project.artifactId}-${project.version}</finalName>
-                            <outputFile>G:\Desktop\HotsNetwork\servers\SG1\plugins\${project.artifactId}-${project.version}-shaded.jar</outputFile>
+                            <outputFile>C:\Users\IT\Desktop\HotsNetwork\servers\customsgtest\plugins\${project.artifactId}-${project.version}-shaded.jar</outputFile>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>

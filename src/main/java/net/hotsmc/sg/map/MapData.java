@@ -1,4 +1,4 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.map;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,9 +17,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import javax.swing.*;
 import javax.xml.bind.Marshaller;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @AllArgsConstructor
 @Getter
@@ -34,8 +32,8 @@ public class MapData {
     private Location max;
     private List<Location> spawns;
     private List<Location> deathmatchSpawns;
-    private List<Block> chests;
-    private List<Block> enderchests;
+    private Map<Block, BlockFace> chests;
+    private Map<Block, BlockFace> enderchests;
 
     public MapData(String name, ConfigCursor cursor){
         this.name = name;
@@ -64,22 +62,22 @@ public class MapData {
         return locations;
     }
 
-    private List<Block> getChestBlockData(){
-        List<Block> blocks = new ArrayList<>();
+    private Map<Block, BlockFace> getChestBlockData(){
+        Map<Block, BlockFace> blocks = new HashMap<>();
         for(String string : cursor.getStringList("ChestLocations")){
             String[] data = string.split(":");
-            blocks.add(Bukkit.getWorld(data[0]).getBlockAt(
-                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))));
+            blocks.put(Bukkit.getWorld(data[0]).getBlockAt(
+                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))), BlockFace.valueOf(data[4]));
         }
         return blocks;
     }
 
-    private List<Block> getEnderChestBlockData(){
-        List<Block> blocks = new ArrayList<>();
+    private Map<Block, BlockFace> getEnderChestBlockData(){
+        Map<Block, BlockFace> blocks = new HashMap<>();
         for(String string : cursor.getStringList("EnderchestLocations")){
             String[] data = string.split(":");
-            blocks.add(Bukkit.getWorld(data[0]).getBlockAt(
-                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))));
+            blocks.put(Bukkit.getWorld(data[0]).getBlockAt(
+                    new Location(Bukkit.getWorld(data[0]), Integer.parseInt(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]))), BlockFace.valueOf(data[4]));
         }
         return blocks;
     }

@@ -1,11 +1,10 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.map;
 
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
-import net.hotsmc.sg.game.MapData;
 import net.hotsmc.sg.utility.BlockUtility;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.PositionInfo;
@@ -16,9 +15,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
-import org.bukkit.material.EnderChest;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;

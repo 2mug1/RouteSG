@@ -5,7 +5,7 @@ import net.hotsmc.core.player.HotsPlayer;
 import net.hotsmc.core.utility.PlayerDataUtility;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.database.PlayerData;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.utility.*;
 import org.bson.Document;
 import org.bukkit.ChatColor;

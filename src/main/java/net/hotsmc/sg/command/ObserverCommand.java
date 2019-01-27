@@ -2,7 +2,7 @@ package net.hotsmc.sg.command;
 
 import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.game.GameTask;
 import net.hotsmc.sg.reflection.BukkitReflection;
 import org.bukkit.Bukkit;

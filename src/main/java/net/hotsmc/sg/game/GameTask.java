@@ -7,8 +7,17 @@ import lombok.Getter;
 import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.other.Style;
+import net.hotsmc.core.player.HotsPlayer;
+import net.hotsmc.core.player.PlayerTime;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.chest.ChestManager;
 import net.hotsmc.sg.hotbar.PlayerHotbar;
+import net.hotsmc.sg.map.MapData;
+import net.hotsmc.sg.map.VoteManager;
+import net.hotsmc.sg.player.GamePlayer;
+import net.hotsmc.sg.player.GamePlayerData;
+import net.hotsmc.sg.player.HealthComparator;
+import net.hotsmc.sg.player.PlayerHealth;
 import net.hotsmc.sg.reflection.BukkitReflection;
 import net.hotsmc.sg.task.StrikeLightningTask;
 import net.hotsmc.sg.team.GameTeam;
@@ -36,12 +45,10 @@ public class GameTask {
     private boolean timerFlag = false;
     private boolean hostWithPlay = false;
     private boolean sponsor;
-    private boolean gracePeriod3Minutes = false;
-    private boolean teamFight = false;
     private boolean spectateRosterOnly = false;
     private List<GamePlayerData> gamePlayerData = new ArrayList<>();
-
-    private GameTeam[] teams;
+    private List<String> fightLog = new ArrayList<>();
+    private int gracePeriodTimeSec = 1800;
 
     private int circleSize = 63;
 
@@ -52,9 +59,6 @@ public class GameTask {
         voteManager = new VoteManager();
         chestManager = new ChestManager();
         chestManager.loadTierItems();
-        teams = new GameTeam[2];
-        teams[0] = new GameTeam(TeamType.AQUA);
-        teams[1] = new GameTeam(TeamType.RED);
         if(gameConfig.isCustomSG()){
             sponsor = false;
             time = 30;
@@ -298,11 +302,11 @@ public class GameTask {
         if(gameConfig.isCustomSG()) {
             teleportToSpawnCustomSG();
             for(GamePlayer gamePlayer : getCustomSGPlayers()){
-                TeamType teamType = null;
+                GameTeam team = null;
                 if(gamePlayer.getInTeam() != null){
-                    teamType = gamePlayer.getInTeam().getTeamType();
+                    team = gamePlayer.getInTeam();
                 }
-                gamePlayerData.add(new GamePlayerData(gamePlayer.getName(), teamType));
+                gamePlayerData.add(new GamePlayerData(gamePlayer.getName(), team));
             }
         }else{
             teleportToSpawn();
@@ -321,9 +325,10 @@ public class GameTask {
             ChatUtility.normalBroadcast("");
             ChatUtility.normalBroadcast(Style.YELLOW + " Host With Play" + Style.GRAY + ": " + (hostWithPlay ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
             ChatUtility.normalBroadcast(Style.YELLOW + " Sponsor" + Style.GRAY + ": " + (sponsor ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
-            ChatUtility.normalBroadcast(Style.YELLOW + " Grace Period 3 minutes" + Style.GRAY + ": " + (gracePeriod3Minutes ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
-            ChatUtility.normalBroadcast(Style.YELLOW + " Team Fight" + Style.GRAY + ": " + (teamFight ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
             ChatUtility.normalBroadcast(Style.YELLOW + " Spectate Roster Only" + Style.GRAY + ": " + (spectateRosterOnly ? Style.GREEN + Style.BOLD + "Enabled" : Style.RED + Style.BOLD + "Disabled"));
+            if(gracePeriodTimeSec < 1800){
+                ChatUtility.normalBroadcast(Style.YELLOW + " Grace Period: " + Style.GRAY + ": " + Style.GREEN + TimeUtility.timeFormat(gracePeriodTimeSec));
+            }
             ChatUtility.normalBroadcast("");
             ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
         }
@@ -415,7 +420,9 @@ public class GameTask {
             }
             playerHealths.sort(new HealthComparator());
             winner = playerHealths.get(0).getGamePlayer();
-            ChatUtility.broadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
             if(!HSG.getGameTask().getGameConfig().isCustomSG()) {
                 winner.getPlayerData().updateWin(1);
                 ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
@@ -431,7 +438,9 @@ public class GameTask {
             }
             playerHealths.sort(new HealthComparator());
             winner = playerHealths.get(0).getGamePlayer();
-            ChatUtility.broadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
             if(!HSG.getGameTask().getGameConfig().isCustomSG()) {
                 winner.getPlayerData().updateWin(1);
                 ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
@@ -447,15 +456,37 @@ public class GameTask {
                 }
             }
             winner = a.get(0);
-            ChatUtility.broadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
+            ChatUtility.normalBroadcast(winner.getSGName() + ChatColor.GREEN + " has won the Survival Games!");
             if (!HSG.getGameTask().getGameConfig().isCustomSG()) {
                 winner.getPlayerData().updateWin(1);
                 ChatUtility.sendMessage(winner, ChatColor.DARK_AQUA + "You've gained " + ChatColor.DARK_GRAY
                         + "[" + ChatColor.YELLOW + winner.getPlayerData().calculatedWinAddPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for won the game!");
             }
         }
-        
-        Bukkit.getWorld(getCurrentMap().getName()).setTime(18000);
+
+        for(Player player : Bukkit.getServer().getOnlinePlayers()){
+            player.playSound(player.getLocation(), Sound.LEVEL_UP, 0.5F, 1F);
+        }
+
+        HSG.getGameTask().getGamePlayerData().sort((o1, o2) -> o1.getPlaceRank() > o2.getPlaceRank() ? 1 : -1);
+
+        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+        ChatUtility.normalBroadcast(Style.YELLOW + Style.BOLD + " Alive Rank");
+        int aliveRank = 1;
+        for(GamePlayerData data : gamePlayerData){
+            ChatUtility.normalBroadcast(Style.YELLOW + "#" + aliveRank + Style.DARK_GRAY + ": " + (data.getTeam() == null ? Style.WHITE + data.getName() : data.getTeam().getPrefix() + data.getName()) + Style.GRAY + " - " + Style.WHITE + data.getKills() + " kills");
+            aliveRank++;
+        }
+        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
+
+        //夜にする
+        for(HotsPlayer hotsPlayer : HotsCore.getHotsPlayers()){
+            if(hotsPlayer != null){
+                hotsPlayer.changePlayerTime(PlayerTime.NIGHT);
+            }
+        }
 
         //打上花火
         for (int i = 0; i < getCurrentMap().getSpawns().size(); i++) {
@@ -466,33 +497,6 @@ public class GameTask {
             fwg.setLifeTime(90);
             fwg.spawn();
         }
-
-        for(Player player : Bukkit.getServer().getOnlinePlayers()){
-            player.playSound(player.getLocation(), Sound.LEVEL_UP, 0.5F, 1F);
-        }
-        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-        ChatUtility.normalBroadcast(Style.YELLOW + Style.BOLD + " Player Kills");
-        int killRank = 1;
-        for(GamePlayerData data : gamePlayerData){
-            ChatUtility.normalBroadcast(Style.YELLOW + "#" + killRank + Style.DARK_GRAY + ": " + (data.getTeamType() == null ? Style.WHITE + data.getName() : data.getTeamType().getPrefix() + data.getName()) + Style.GRAY + " - " + Style.WHITE + data.getKills() + " kills");
-            killRank++;
-        }
-        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-
-        HSG.getGameTask().getGamePlayerData().sort(new Comparator<GamePlayerData>() {
-            public int compare(GamePlayerData o1, GamePlayerData o2) {
-                return o1.getPlaceRank() > o2.getPlaceRank() ? 1 : -1;
-            }
-        });
-
-        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-        ChatUtility.normalBroadcast(Style.YELLOW + Style.BOLD + " Alive Rank");
-        int aliveRank = 1;
-        for(GamePlayerData data : gamePlayerData){
-            ChatUtility.normalBroadcast(Style.YELLOW + "#" + aliveRank + Style.DARK_GRAY + ": " + (data.getTeamType() == null ? Style.WHITE + data.getName() : data.getTeamType().getPrefix() + data.getName()));
-            aliveRank++;
-        }
-        ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
     }
 
     /**
@@ -500,12 +504,14 @@ public class GameTask {
      */
     private void onLobby(){
         gamePlayerData.clear();
+        fightLog.clear();
         for (GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.disableWatching();
             gamePlayer.teleport(gameConfig.getLobbyLocation());
             gamePlayer.resetPlayer();
             gamePlayer.setHotbar(PlayerHotbar.LOBBY);
         }
+        HSG.getInstance().getTeamManager().getTeams().clear();
         //Hubに転送
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
             HotsCore.getInstance().getBungeeChannelApi().connect(player, "hub");
@@ -517,8 +523,7 @@ public class GameTask {
             BukkitReflection.setMaxPlayers(HSG.getInstance().getServer(), 25);
             host = null;
             sponsor = false;
-            gracePeriod3Minutes = false;
-            teamFight = false;
+            gracePeriodTimeSec = 1800;
             spectateRosterOnly = false;
             HSG.getInstance().getWhitelistedPlayers().clear();
             HSG.getInstance().getObserverPlayers().clear();
@@ -545,25 +550,6 @@ public class GameTask {
                 setTimerFlag(false);
                 setTime(30);
                 ChatUtility.broadcast(ChatColor.RED + "Not enough players stopping countdown.");
-            }
-            if(HSG.getGameTask().isTeamFight()) {
-                if(hostWithPlay) {
-                    for (GamePlayer gamePlayer : HSG.getGameTask().getGamePlayers()) {
-                        if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
-                            setTimerFlag(false);
-                            setTime(gameConfig.getLobbyTime());
-                            ChatUtility.broadcast(Style.RED + "Countdown has been stopped because require to join all players are belonging to any team.");
-                        }
-                    }
-                }else{
-                    for (GamePlayer gamePlayer : HSG.getGameTask().getCustomSGPlayers()) {
-                        if (gamePlayer.getInTeam() == null && !HSG.getInstance().getObserverPlayers().contains(gamePlayer.getName().toLowerCase())) {
-                            setTimerFlag(false);
-                            setTime(gameConfig.getLobbyTime());
-                            ChatUtility.broadcast(Style.RED + "Countdown has been stopped because require to join all players are belonging to any team.");
-                        }
-                    }
-                }
             }
         }
         if(time <= 5){
@@ -683,20 +669,20 @@ public class GameTask {
             ChatUtility.broadcast(ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + time + ChatColor.DARK_GRAY + "] " + ChatColor.RED + " seconds until teleport to deathmatch.");
             return;
         }
-        if (time == 1620) {
-            if (isGracePeriod3Minutes()) {
-                setGracePeriod3Minutes(false);
+
+        if(time < 1800) {
+            if (time == gracePeriodTimeSec) {
                 ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-                ChatUtility.normalBroadcast(Style.PINK + Style.BOLD + "PvP" + Style.YELLOW + " has been Enabled!");
+                ChatUtility.normalBroadcast(ChatColor.AQUA + "PvP has been enabled!");
                 ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
                 for(Player player : Bukkit.getServer().getOnlinePlayers()){
-                    player.playSound(player.getLocation(), Sound.WITHER_SPAWN, 0.5F, 1);
+                    player.playSound(player.getLocation(), Sound.WITHER_SPAWN, 1, 1);
                 }
             }
         }
-        //Chest Refill
-        //17分
+
         if (time == 1020) {
+            //Chest Refill 17分
             chestManager.refillChest();
             ChatUtility.broadcast(ChatColor.AQUA + "All of the chest have refilled!");
             for(Player player : Bukkit.getServer().getOnlinePlayers()){
@@ -797,44 +783,6 @@ public class GameTask {
         return toReturn;
     }
 
-    public TeamType getPlayerTeam(GamePlayer gamePlayer){
-        for(GameTeam gameTeam : teams){
-            for(GamePlayer teamPlayer : gameTeam.getPlayers()){
-                if(teamPlayer.getUUID().equals(gamePlayer.getUUID())){
-                    return gameTeam.getTeamType();
-                }
-            }
-        }
-        return null;
-    }
-
-    public void resetTeams(){
-        for(GameTeam gameTeam : teams){
-            gameTeam.removeAllPlayer();
-        }
-        teams = new GameTeam[2];
-        teams[0] = new GameTeam(TeamType.AQUA);
-        teams[1] = new GameTeam(TeamType.RED);
-    }
-
-    public GameTeam getGameTeam(TeamType teamType){
-        for(GameTeam team : teams){
-            if(team.getTeamType() == teamType){
-                return team;
-            }
-        }
-        return null;
-    }
-
-    public GameTeam getOpponentTeam(TeamType teamType){
-        for(GameTeam gameTeam : teams){
-            if(gameTeam.getTeamType() != teamType){
-                return gameTeam;
-            }
-        }
-        return null;
-    }
-
     public GamePlayerData getGamePlayerData(String name){
         for(GamePlayerData data : gamePlayerData){
             if(data.getName().equalsIgnoreCase(name)){
@@ -852,5 +800,13 @@ public class GameTask {
             }
         }
         return size;
+    }
+
+    public void addFightLog(String log){
+        fightLog.add(Style.WHITE + "- (" + state.name() + " " + getFormatTime() + ") " + log);
+    }
+
+    public String getFormatTime(){
+        return TimeUtility.timeFormat(time);
     }
 }

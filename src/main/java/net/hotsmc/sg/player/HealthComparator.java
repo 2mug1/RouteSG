@@ -1,4 +1,4 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.player;
 
 import java.util.Comparator;
 

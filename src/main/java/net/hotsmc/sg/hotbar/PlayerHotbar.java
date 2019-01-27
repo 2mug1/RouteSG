@@ -6,9 +6,10 @@ import net.hotsmc.core.gui.ClickActionItem;
 import net.hotsmc.core.hotbar.HotbarAdapter;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.menu.HostManagerMenu;
 import net.hotsmc.sg.menu.SettingsMenu;
+import net.hotsmc.sg.menu.SpectateManagerMenu;
 import net.hotsmc.sg.menu.StatisticsMenu;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ItemUtility;
@@ -98,7 +99,7 @@ public enum PlayerHotbar {
                     ChatUtility.sendMessage(player, ChatColor.RED + "You are not host.");
                     return;
                 }
-                new HostManagerMenu().openMenu(player, 18);
+                new HostManagerMenu().openMenu(player);
             }
         };
         items[5] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {
@@ -146,10 +147,10 @@ public enum PlayerHotbar {
                 new StatisticsMenu().openMenu(player, 45);
             }
         };
-        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Player", Material.COMPASS, false)) {
+        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Manager", Material.NAME_TAG, false)) {
             @Override
             public void clickAction(Player player) {
-                HSG.getInstance().getSpectateMenu().openMenu(player, 27);
+                new SpectateManagerMenu().openMenu(player, 27);
             }
         };
         items[8] = new ClickActionItem(net.hotsmc.core.utility.ItemUtility.createDye(Style.AQUA + "Back to Hub", 1, 14)) {

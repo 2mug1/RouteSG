@@ -2,7 +2,7 @@ package net.hotsmc.sg.command;
 
 import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
-import net.hotsmc.sg.game.GamePlayerData;
+import net.hotsmc.sg.player.GamePlayerData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,7 +27,7 @@ public class KillTotalCommand implements CommandExecutor {
                     }
                     rank++;
                 }
-                sender.sendMessage(Style.AQUA + gamePlayerData.getName() + " is currently having " + gamePlayerData.getKills() + " kills (#" + rank + ") - " + (gamePlayerData.isAlive() ? Style.GREEN + Style.BOLD + "ALIVE" : Style.RED + Style.BOLD + "DEAD" + Style.WHITE + " - Placed #" + gamePlayerData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size()));
+                sender.sendMessage(Style.AQUA + gamePlayerData.getName() + " is currently having " + gamePlayerData.getKills() + " kills (#" + rank + ")");
             }else{
                 sender.sendMessage(Style.RED + "/kt <player>");
             }

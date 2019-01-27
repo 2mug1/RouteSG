@@ -1,4 +1,4 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.map;
 
 import com.google.common.collect.Lists;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.player.HotsPlayer;
 import net.hotsmc.core.player.PlayerRank;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.utility.ChatUtility;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

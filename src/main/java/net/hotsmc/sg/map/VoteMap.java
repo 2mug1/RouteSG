@@ -1,4 +1,4 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.map;
 
 import lombok.Getter;
 import net.hotsmc.sg.HSG;

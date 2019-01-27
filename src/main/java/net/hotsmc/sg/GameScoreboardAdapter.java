@@ -1,21 +1,18 @@
 package net.hotsmc.sg;
 
-import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.core.scoreboard.Board;
 import net.hotsmc.core.scoreboard.BoardAdapter;
-import net.hotsmc.sg.database.PlayerData;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.game.GameState;
 import net.hotsmc.sg.game.GameTask;
-import net.hotsmc.sg.game.VoteMap;
+import net.hotsmc.sg.map.VoteMap;
 import net.hotsmc.sg.utility.DateUtility;
 import net.hotsmc.sg.utility.TimeUtility;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 
-import javax.persistence.Lob;
 import java.util.ArrayList;
 import java.util.List;
 

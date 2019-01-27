@@ -1,39 +1,28 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.chest;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import lombok.Getter;
-import net.hotsmc.core.gui.ClickActionItem;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.config.ConfigCursor;
 import net.hotsmc.sg.config.FileConfig;
-import net.hotsmc.sg.hotbar.PlayerHotbar;
-import net.hotsmc.sg.utility.BlockUtility;
+import net.hotsmc.sg.player.GamePlayer;
+import net.hotsmc.sg.game.GameState;
+import net.hotsmc.sg.map.MapData;
 import net.hotsmc.sg.utility.ChatUtility;
 import net.hotsmc.sg.utility.ChestPacketUtility;
-import net.minecraft.server.v1_7_R4.*;
 import org.bukkit.*;
 import org.bukkit.Material;
-import org.bukkit.block.*;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_7_R4.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.material.EnderChest;
-import org.bukkit.material.MaterialData;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 @Getter
@@ -67,17 +56,17 @@ public class ChestManager implements Listener {
         chests.clear();
 
         //Tier1読み込み
-        for(Block block : mapData.getChests()) {
+        for(Block block : mapData.getChests().keySet()) {
             if (block.getType() == Material.CHEST) {
-                chests.add(new GameChest(false, block.getLocation()));
+                chests.add(new GameChest(false, block.getLocation(), mapData.getChests().get(block)));
             }
         }
 
         //Tier2読み込み
-        for(Block block : mapData.getEnderchests()) {
+        for(Block block : mapData.getEnderchests().keySet()) {
             if (block.getType() == Material.ENDER_CHEST) {
                 block.setType(Material.CHEST);
-                chests.add(new GameChest(true, block.getLocation()));
+                chests.add(new GameChest(true, block.getLocation(), mapData.getEnderchests().get(block)));
             }
         }
     }

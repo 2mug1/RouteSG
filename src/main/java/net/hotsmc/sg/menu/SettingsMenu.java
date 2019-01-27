@@ -1,12 +1,11 @@
 package net.hotsmc.sg.menu;
 
-import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.menu.Button;
 import net.hotsmc.core.gui.menu.Menu;
 import net.hotsmc.core.other.Style;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.database.PlayerData;
-import net.hotsmc.sg.game.GamePlayer;
+import net.hotsmc.sg.player.GamePlayer;
 import net.hotsmc.sg.utility.ItemUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

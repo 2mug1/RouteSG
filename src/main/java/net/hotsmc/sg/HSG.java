@@ -11,20 +11,16 @@ import net.hotsmc.sg.database.MongoConfig;
 import net.hotsmc.sg.database.MongoConnection;
 import net.hotsmc.sg.game.*;
 import net.hotsmc.sg.listener.ListenerHandler;
+import net.hotsmc.sg.map.MapData;
+import net.hotsmc.sg.map.MapManager;
 import net.hotsmc.sg.menu.*;
-import net.hotsmc.sg.team.TeamType;
-import net.hotsmc.sg.utility.ItemUtility;
-import org.bson.Document;
+import net.hotsmc.sg.team.TeamManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +39,8 @@ public class HSG extends JavaPlugin {
     @Getter
     private static MapManager mapManager;
 
+    private TeamManager teamManager;
+
     @Getter
     private static Settings settings;
 
@@ -50,6 +48,7 @@ public class HSG extends JavaPlugin {
     private VoteMenu voteMenu;
     private SelectMapMenu selectMapMenu;
     private PresetMenu presetMenu;
+    private TeamListMenu teamListMenu;
 
     private List<String> whitelistedPlayers;
     private List<String> observerPlayers;
@@ -74,6 +73,8 @@ public class HSG extends JavaPlugin {
             observerPlayers = new ArrayList<>();
             selectMapMenu = new SelectMapMenu();
             presetMenu = new PresetMenu();
+            teamListMenu = new TeamListMenu();
+            teamManager = new TeamManager();
         }
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
     }
@@ -100,9 +101,13 @@ public class HSG extends JavaPlugin {
         this.getCommand("unregister").setExecutor(new UnregisterPlayerCommand());
         this.getCommand("frkbreload").setExecutor(new FRKBReloadCommand());
         this.getCommand("roster").setExecutor(new RosterCommand());
-        this.getCommand("team").setExecutor(new TeamCommand());
         this.getCommand("observer").setExecutor(new ObserverCommand());
         this.getCommand("kt").setExecutor(new KillTotalCommand());
+        this.getCommand("team").setExecutor(new TeamCommand());
+        this.getCommand("tc").setExecutor(new TeamChatCommand());
+        this.getCommand("tl").setExecutor(new TeamListCommand());
+        this.getCommand("fl").setExecutor(new FightLogCommand());
+
     }
 
     public static List<Player> getOnlinePlayers() {

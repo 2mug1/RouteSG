@@ -1,4 +1,4 @@
-package net.hotsmc.sg.game;
+package net.hotsmc.sg.player;
 
 import com.google.common.collect.Lists;
 import lombok.Getter;
@@ -6,7 +6,9 @@ import lombok.Setter;
 import net.hotsmc.core.HotsCore;
 import net.hotsmc.core.gui.ClickActionItem;
 import net.hotsmc.core.hotbar.HotbarAdapter;
+import net.hotsmc.core.player.HotsPlayer;
 import net.hotsmc.sg.HSG;
+import net.hotsmc.sg.chest.GameChest;
 import net.hotsmc.sg.database.PlayerData;
 import net.hotsmc.sg.hotbar.PlayerHotbar;
 import net.hotsmc.sg.menu.SponsorMenu;
@@ -38,6 +40,7 @@ public class GamePlayer {
     private GameChest openingChest;
     private PlayerHotbar hotbar;
     private boolean alive = true;
+    private boolean pvpAlert = false;
 
     public GamePlayer(Player player) {
         this.player = player;
@@ -224,7 +227,7 @@ public class GamePlayer {
     }
 
     public void sendMessage(String s) {
-        ChatUtility.sendMessage(player, s);
+        player.sendMessage(s);
     }
 
     public UUID getUUID() {
@@ -240,7 +243,7 @@ public class GamePlayer {
     }
 
     public GameTeam getInTeam(){
-        for(GameTeam gameTeam : HSG.getGameTask().getTeams()){
+        for(GameTeam gameTeam : HSG.getInstance().getTeamManager().getTeams()){
             if(gameTeam.getTeamPlayer(this) != null){
                 return gameTeam;
             }
@@ -248,7 +251,15 @@ public class GamePlayer {
         return null;
     }
 
+    public boolean isInTeam(){
+        return getInTeam() != null;
+    }
+
     public String getSGName(){
-        return getInTeam() == null ? HotsCore.getHotsPlayer(player).getColorName() : getInTeam().getPrefix() + getName();
+        return getInTeam() == null ? getHotsPlayer().getColorName() : getInTeam().getPrefix() + getHotsPlayer().getColorName();
+    }
+
+    public HotsPlayer getHotsPlayer() {
+        return HotsCore.getHotsPlayer(player);
     }
 }
