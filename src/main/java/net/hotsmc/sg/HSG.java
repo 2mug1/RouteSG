@@ -14,6 +14,10 @@ import net.hotsmc.sg.listener.ListenerHandler;
 import net.hotsmc.sg.map.MapData;
 import net.hotsmc.sg.map.MapManager;
 import net.hotsmc.sg.menu.*;
+import net.hotsmc.sg.preset.PresetManager;
+import net.hotsmc.sg.preset.impl.ClanWarPreset;
+import net.hotsmc.sg.preset.impl.HotsTournamentPreset;
+import net.hotsmc.sg.preset.impl.MatsuLeaguePreset;
 import net.hotsmc.sg.team.TeamManager;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -40,6 +44,7 @@ public class HSG extends JavaPlugin {
     private static MapManager mapManager;
 
     private TeamManager teamManager;
+    private PresetManager presetManager;
 
     @Getter
     private static Settings settings;
@@ -56,6 +61,7 @@ public class HSG extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        presetManager = new PresetManager();
         settings = new Settings(new ConfigCursor(new FileConfig(this, "Settings.yml"), "settings"));
         mapManager = new MapManager(this);
         mapManager.load();
@@ -75,6 +81,9 @@ public class HSG extends JavaPlugin {
             presetMenu = new PresetMenu();
             teamListMenu = new TeamListMenu();
             teamManager = new TeamManager();
+            presetManager.register(new ClanWarPreset());
+            presetManager.register(new MatsuLeaguePreset());
+            presetManager.register(new HotsTournamentPreset());
         }
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
     }

@@ -399,7 +399,7 @@ public class PlayerListener implements Listener {
     public void onDamageByEntity(EntityDamageByEntityEvent event) {
         GameTask gameTask = HSG.getGameTask();
         GameState state = gameTask.getState();
-        if (event.getDamager() instanceof FishHook && ((FishHook) event.getDamager()).getShooter() instanceof Player) {
+        if (event.getDamager() instanceof FishHook && ((FishHook) event.getDamager()).getShooter() instanceof Player && event.getEntity() instanceof Player) {
             Player damager = (Player) ((FishHook) event.getDamager()).getShooter();
             GamePlayer damagerGP = gameTask.getGamePlayer(damager);
             Player damaged = (Player) event.getEntity();
@@ -772,11 +772,20 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onIgnite(BlockIgniteEvent event) {
+        Player player = event.getPlayer();
         if (event.getCause() == BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL) {
-            Player player = event.getPlayer();
             ItemStack itemStack = player.getItemInHand();
             if (itemStack.getType() == Material.AIR) return;
             if (itemStack.getType() == Material.FLINT_AND_STEEL) {
+                GameTask gameTask = HSG.getGameTask();
+                GameState state = HSG.getGameTask().getState();
+                if (state == GameState.LiveGame) {
+                    if (gameTask.getTime() > gameTask.getGracePeriodTimeSec()) {
+                        event.setCancelled(true);
+                        player.sendMessage(Style.RED + "PvP has been disabling. Will be enabled in " + TimeUtility.timeFormat(gameTask.getGracePeriodTimeSec()));
+                        return;
+                    }
+                }
                 if (itemStack.getDurability() < 61) {
                     itemStack.setDurability((short) 61);
                 }

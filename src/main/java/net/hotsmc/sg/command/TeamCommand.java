@@ -38,6 +38,7 @@ public class TeamCommand implements CommandExecutor {
                 player.sendMessage(Style.AQUA + " 招待承認: /team accept <player>");
                 player.sendMessage(Style.AQUA + " チャット: /tc <message>");
                 player.sendMessage(Style.AQUA + " メンバー表示: /tl");
+                player.sendMessage(Style.AQUA + " 他チームのメンバー表示: /tl <player>");
                 player.sendMessage(Style.HORIZONTAL_SEPARATOR);
                 return true;
             }

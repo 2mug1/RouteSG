@@ -8,6 +8,7 @@ net\hotsmc\sg\menu\SpectateMenu$1.class
 net\hotsmc\sg\utility\MongoUtility.class
 net\hotsmc\sg\listener\listeners\WorldLoadListener.class
 net\hotsmc\sg\map\VoteMapComparator.class
+net\hotsmc\sg\preset\Preset.class
 net\hotsmc\sg\menu\HostManagerMenu$5.class
 net\hotsmc\sg\game\GameTask$3.class
 net\hotsmc\sg\command\KillTotalCommand.class
@@ -24,10 +25,12 @@ net\hotsmc\sg\menu\SponsorMenu.class
 net\hotsmc\sg\menu\GracePeriodMenu$1.class
 net\hotsmc\sg\player\GamePlayerData.class
 net\hotsmc\sg\menu\SettingsMenu$4.class
+net\hotsmc\sg\preset\impl\MatsuLeaguePreset.class
 net\hotsmc\sg\menu\VoteMenu.class
 net\hotsmc\sg\hotbar\PlayerHotbar$13.class
 net\hotsmc\sg\database\MongoConnection.class
 net\hotsmc\sg\menu\HostManagerMenu$12.class
+net\hotsmc\sg\preset\PresetManager.class
 net\hotsmc\sg\chest\GameChest.class
 net\hotsmc\sg\utility\ChestPacketUtility.class
 net\hotsmc\sg\command\TeamChatCommand.class
@@ -42,6 +45,7 @@ net\hotsmc\sg\listener\listeners\PlayerListener.class
 net\hotsmc\sg\menu\HostManagerMenu$11.class
 net\hotsmc\sg\menu\HostManagerMenu$3.class
 net\hotsmc\sg\chest\TierType.class
+net\hotsmc\sg\preset\impl\HotsTournamentPreset.class
 net\hotsmc\sg\command\FightLogCommand.class
 net\hotsmc\sg\utility\ClassUtility.class
 net\hotsmc\sg\utility\PlayerUtility$1.class
@@ -66,6 +70,7 @@ net\hotsmc\sg\hotbar\PlayerHotbar$15.class
 net\hotsmc\sg\utility\DateUtility.class
 net\hotsmc\sg\command\SpectateCommand.class
 net\hotsmc\sg\hotbar\PlayerHotbar$2.class
+net\hotsmc\sg\preset\impl\ClanWarPreset.class
 net\hotsmc\sg\task\StrikeLightningTask.class
 net\hotsmc\sg\command\ListCommand.class
 net\hotsmc\sg\team\TeamManager.class
@@ -77,16 +82,17 @@ net\hotsmc\sg\utility\ItemUtility.class
 net\hotsmc\sg\utility\PlayerUtility.class
 net\hotsmc\sg\menu\GracePeriodMenu$2.class
 net\hotsmc\sg\menu\InviteMenu$1.class
+net\hotsmc\sg\listener\listeners\FrameProtectListener.class
 net\hotsmc\sg\utility\PositionInfo.class
 net\hotsmc\sg\command\VoteCommand.class
 net\hotsmc\sg\command\RosterCommand.class
 net\hotsmc\sg\menu\SpectateManagerMenu.class
 net\hotsmc\sg\reflection\BukkitReflection.class
 net\hotsmc\sg\command\ObserverCommand.class
+net\hotsmc\sg\listener\listeners\BoatListener.class
 net\hotsmc\sg\utility\WorldDataUtility.class
 net\hotsmc\sg\menu\HostManagerMenu$13.class
 net\hotsmc\sg\hotbar\PlayerHotbar$12.class
-net\hotsmc\sg\menu\PresetMenu$2.class
 net\hotsmc\sg\hotbar\PlayerHotbar.class
 net\hotsmc\sg\game\GameConfig.class
 net\hotsmc\sg\utility\BlockUtility.class
