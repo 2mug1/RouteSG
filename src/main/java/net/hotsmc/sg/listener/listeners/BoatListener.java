@@ -3,7 +3,9 @@ package net.hotsmc.sg.listener.listeners;
 import net.hotsmc.core.scoreboard.BoardTimer;
 import net.hotsmc.sg.HSG;
 import net.hotsmc.sg.player.GamePlayer;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Player;
@@ -17,6 +19,8 @@ import org.bukkit.event.vehicle.VehicleCreateEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.Objects;
 
 public class BoatListener implements Listener {
 
@@ -37,7 +41,10 @@ public class BoatListener implements Listener {
         Vehicle vehicle = event.getVehicle();
         if(vehicle instanceof Boat){
             if(!vehicle.getLocation().getBlock().getLocation().subtract(0D, 1D, 0D).getBlock().isLiquid()){
+                Location location = vehicle.getLocation();
+                if(location == null)return;
                 vehicle.remove();
+                location.getWorld().dropItemNaturally(location, new ItemStack(Material.BOAT));
             }
         }
     }
