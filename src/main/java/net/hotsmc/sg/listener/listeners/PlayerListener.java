@@ -235,7 +235,7 @@ public class PlayerListener implements Listener {
 
         //生きているプレイヤーだったら
         if (!gamePlayer.isWatching()) {
-            if(state != GameState.Lobby){
+            if (state != GameState.Lobby) {
                 gameTask.addFightLog(gamePlayer.getName() + Style.YELLOW + " dead (left the game)");
             }
             GameTeam team = gameTask.getGamePlayer(player).getInTeam();
@@ -247,56 +247,56 @@ public class PlayerListener implements Listener {
                     ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
                     ChatUtility.normalBroadcast(Style.YELLOW + "Team #" + team.getTeamID() + Style.WHITE + " has been eliminated!");
                     ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-                    for(Player player1 : Bukkit.getServer().getOnlinePlayers()){
+                    for (Player player1 : Bukkit.getServer().getOnlinePlayers()) {
                         player1.playSound(player1.getLocation(), Sound.WITHER_SPAWN, 0.7F, 1);
                     }
                 }
             }
-        }
-        GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(gamePlayer.getName());
-        if (gamePlayerData != null) {
-            gamePlayerData.setAlive(false);
-            gamePlayerData.applyPlaceRank();
-        }
-        if (state == GameState.PreGame) {
-            Location location = player.getLocation();
-            location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
-        }
-        if (state == GameState.LiveGame || state == GameState.PreDeathmatch || state == GameState.DeathMatch) {
-            gamePlayer.setWatching(true);
-            World world = Bukkit.getWorld(HSG.getGameTask().getCurrentMap().getDefaultSpawn().getWorld().getName());
-            Location location = player.getLocation();
-            //チェストを開けていたら
-            if (gamePlayer.getOpeningChest() != null) {
-                ChestPacketUtility.closeChestPacket(gamePlayer.getOpeningChest().getLocation());
-                gamePlayer.setOpeningChest(null);
-                player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
+            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(gamePlayer.getName());
+            if (gamePlayerData != null) {
+                gamePlayerData.setAlive(false);
+                gamePlayerData.applyPlaceRank();
             }
-            for (ItemStack itemStack : player.getInventory().getContents()) {
-                if (itemStack != null && itemStack.getType() != Material.AIR) {
-                    world.dropItemNaturally(location, itemStack);
+            if (state == GameState.PreGame) {
+                Location location = player.getLocation();
+                location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
+            }
+            if (state == GameState.LiveGame || state == GameState.PreDeathmatch || state == GameState.DeathMatch) {
+                gamePlayer.setWatching(true);
+                World world = Bukkit.getWorld(HSG.getGameTask().getCurrentMap().getDefaultSpawn().getWorld().getName());
+                Location location = player.getLocation();
+                //チェストを開けていたら
+                if (gamePlayer.getOpeningChest() != null) {
+                    ChestPacketUtility.closeChestPacket(gamePlayer.getOpeningChest().getLocation());
+                    gamePlayer.setOpeningChest(null);
+                    player.getWorld().playSound(player.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
                 }
-            }
-            //アイテム全部落とす
-            for (ItemStack itemStack : player.getInventory().getArmorContents()) {
-                if (itemStack != null && itemStack.getType() != Material.AIR) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
+                for (ItemStack itemStack : player.getInventory().getContents()) {
+                    if (itemStack != null && itemStack.getType() != Material.AIR) {
+                        world.dropItemNaturally(location, itemStack);
+                    }
                 }
-            }
-            if (!gameTask.getGameConfig().isCustomSG()) {
-                ChatUtility.sendMessage(gamePlayer, ChatColor.DARK_AQUA + "You've lost "
-                        + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + gamePlayer.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
-                gamePlayer.getPlayerData().withdrawPoint(gamePlayer.getPlayerData().calculatedPoint());
-            }
-            PlayerUtility.clearEffects(player);
-            location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
-            if (HotsCore.getHotsPlayer(player) != null) {
-                ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
-            }
-            if (gameTask.countAlive() <= 3) {
-                for (GamePlayer gamePlayer1 : gameTask.getGamePlayers()) {
-                    if (!gamePlayer1.isWatching()) {
-                        gamePlayer1.getPlayerData().updateTop3(1);
+                //アイテム全部落とす
+                for (ItemStack itemStack : player.getInventory().getArmorContents()) {
+                    if (itemStack != null && itemStack.getType() != Material.AIR) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
+                    }
+                }
+                if (!gameTask.getGameConfig().isCustomSG()) {
+                    ChatUtility.sendMessage(gamePlayer, ChatColor.DARK_AQUA + "You've lost "
+                            + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + gamePlayer.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
+                    gamePlayer.getPlayerData().withdrawPoint(gamePlayer.getPlayerData().calculatedPoint());
+                }
+                PlayerUtility.clearEffects(player);
+                location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
+                if (HotsCore.getHotsPlayer(player) != null) {
+                    ChatUtility.broadcast(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + HotsCore.getHotsPlayer(player).getColorName());
+                }
+                if (gameTask.countAlive() <= 3) {
+                    for (GamePlayer gamePlayer1 : gameTask.getGamePlayers()) {
+                        if (!gamePlayer1.isWatching()) {
+                            gamePlayer1.getPlayerData().updateTop3(1);
+                        }
                     }
                 }
             }
