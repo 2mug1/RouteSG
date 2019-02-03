@@ -13,6 +13,10 @@ public class TeamManager {
 
     private List<GameTeam> teams = new LinkedList<>();
 
+    public boolean canCreate(){
+        return teams.size() < 12;
+    }
+
     public GameTeam createTeam(GamePlayer leader) {
         return new GameTeam(teams.size() + 1, leader);
     }

@@ -410,7 +410,7 @@ public class GameTask {
         state = GameState.EndGame;
         ChatUtility.broadcast(ChatColor.GREEN + "The games have ended!");
         List<PlayerHealth> playerHealths = Lists.newArrayList();
-        GamePlayer winner;
+        GamePlayer winner = null;
 
         if(countAlive() == 3){
             for(GamePlayer gamePlayer : gamePlayers){
@@ -470,7 +470,13 @@ public class GameTask {
             player.playSound(player.getLocation(), Sound.LEVEL_UP, 0.5F, 1F);
         }
 
-        HSG.getGameTask().getGamePlayerData().sort((o1, o2) -> o1.getPlaceRank() > o2.getPlaceRank() ? 1 : -1);
+        if(winner != null) {
+            GamePlayerData winnerData = getGamePlayerData(winner.getName());
+            winnerData.setAlive(false);
+            winnerData.applyPlaceRank();
+        }
+
+        gamePlayerData.sort((o1, o2) -> o1.getPlaceRank() > o2.getPlaceRank() ? 1 : -1);
 
         ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
         ChatUtility.normalBroadcast(Style.YELLOW + Style.BOLD + " Alive Rank");
@@ -800,6 +806,16 @@ public class GameTask {
             }
         }
         return size;
+    }
+
+    public List<GamePlayer> getAlivePlayers(){
+        List<GamePlayer> alive = new LinkedList<>();
+        for(GamePlayer gamePlayer : gamePlayers){
+            if(!gamePlayer.isWatching()){
+                alive.add(gamePlayer);
+            }
+        }
+        return alive;
     }
 
     public void addFightLog(String log){

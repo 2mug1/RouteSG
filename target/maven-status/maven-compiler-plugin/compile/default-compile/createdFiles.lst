@@ -1,6 +1,7 @@
 net\hotsmc\sg\menu\SponsorMenu$1.class
 net\hotsmc\sg\menu\SpectateManagerMenu$2.class
 net\hotsmc\sg\menu\SettingsMenu$1.class
+net\hotsmc\sg\hotbar\PlayerHotbar$16.class
 net\hotsmc\sg\map\MapManager.class
 net\hotsmc\sg\menu\HostManagerMenu$8.class
 net\hotsmc\sg\hotbar\PlayerHotbar$3.class
@@ -11,7 +12,7 @@ net\hotsmc\sg\map\VoteMapComparator.class
 net\hotsmc\sg\preset\Preset.class
 net\hotsmc\sg\menu\HostManagerMenu$5.class
 net\hotsmc\sg\game\GameTask$3.class
-net\hotsmc\sg\command\KillTotalCommand.class
+net\hotsmc\sg\command\KillCountCommand.class
 net\hotsmc\sg\menu\SelectMapMenu$2.class
 net\hotsmc\sg\team\GameTeam.class
 net\hotsmc\sg\menu\HostManagerMenu$15.class
@@ -83,6 +84,7 @@ net\hotsmc\sg\utility\PlayerUtility.class
 net\hotsmc\sg\menu\GracePeriodMenu$2.class
 net\hotsmc\sg\menu\InviteMenu$1.class
 net\hotsmc\sg\listener\listeners\FrameProtectListener.class
+net\hotsmc\sg\command\KillTopCommand.class
 net\hotsmc\sg\utility\PositionInfo.class
 net\hotsmc\sg\command\VoteCommand.class
 net\hotsmc\sg\command\RosterCommand.class

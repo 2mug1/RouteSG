@@ -74,13 +74,13 @@ public class HSG extends JavaPlugin {
         HotsCore.getInstance().setBoardManager(new BoardManager(this, new GameScoreboardAdapter()));
         voteMenu = new VoteMenu();
         spectateMenu = new SpectateMenu();
+        teamManager = new TeamManager();
         if(gameTask.getGameConfig().isCustomSG()) {
             whitelistedPlayers = new ArrayList<>();
             observerPlayers = new ArrayList<>();
             selectMapMenu = new SelectMapMenu();
             presetMenu = new PresetMenu();
             teamListMenu = new TeamListMenu();
-            teamManager = new TeamManager();
             presetManager.register(new ClanWarPreset());
             presetManager.register(new MatsuLeaguePreset());
             presetManager.register(new HotsTournamentPreset());
@@ -111,12 +111,12 @@ public class HSG extends JavaPlugin {
         this.getCommand("frkbreload").setExecutor(new FRKBReloadCommand());
         this.getCommand("roster").setExecutor(new RosterCommand());
         this.getCommand("observer").setExecutor(new ObserverCommand());
-        this.getCommand("kt").setExecutor(new KillTotalCommand());
+        this.getCommand("kc").setExecutor(new KillCountCommand());
         this.getCommand("team").setExecutor(new TeamCommand());
         this.getCommand("tc").setExecutor(new TeamChatCommand());
         this.getCommand("tl").setExecutor(new TeamListCommand());
         this.getCommand("fl").setExecutor(new FightLogCommand());
-
+        this.getCommand("kt").setExecutor(new KillTopCommand());
     }
 
     public static List<Player> getOnlinePlayers() {

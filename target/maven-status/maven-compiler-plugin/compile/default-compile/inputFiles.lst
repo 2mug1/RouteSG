@@ -22,6 +22,7 @@ E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\utility\TimeUtility.jav
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\database\MongoConfig.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\menu\SpectateMenu.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\listener\listeners\WorldLoadListener.java
+E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\command\KillTopCommand.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\menu\SelectMapMenu.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\chest\ChestManager.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\listener\ListenerHandler.java
@@ -35,7 +36,6 @@ E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\player\HealthComparator
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\menu\TeamListMenu.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\map\VoteMap.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\map\VoteMapComparator.java
-E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\command\KillTotalCommand.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\HSG.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\utility\PositionInfo.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\utility\PlayerUtility.java
@@ -81,6 +81,7 @@ E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\utility\DateUtility.jav
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\menu\PresetMenu.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\team\TeamType.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\command\GiveHostCommand.java
+E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\command\KillCountCommand.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\Settings.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\config\FileConfig.java
 E:\Intellij_workspace\HotsSG\src\main\java\net\hotsmc\sg\database\MongoConnection.java

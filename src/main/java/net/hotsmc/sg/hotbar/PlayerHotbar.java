@@ -18,6 +18,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public enum PlayerHotbar {
 
@@ -139,7 +141,7 @@ public enum PlayerHotbar {
                 new SettingsMenu().openMenu(player, 9);
             }
         };
-        items[1] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {
+        items[2] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {
             @Override
             public void clickAction(Player player) {
                 GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
@@ -147,10 +149,28 @@ public enum PlayerHotbar {
                 new StatisticsMenu().openMenu(player, 45);
             }
         };
-        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Manager", Material.NAME_TAG, false)) {
+        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Manager", Material.COMPASS, false)) {
             @Override
             public void clickAction(Player player) {
                 new SpectateManagerMenu().openMenu(player, 27);
+            }
+        };
+        items[6] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Random Teleport", Material.EYE_OF_ENDER, false)) {
+            @Override
+            public void clickAction(Player player) {
+                List<GamePlayer> players = HSG.getGameTask().getAlivePlayers();
+                if(players.size() <= 0){
+                    player.sendMessage(Style.RED + "Error: Failed to teleport to player");
+                    return;
+                }
+                Collections.shuffle(players);
+                GamePlayer target = players.get(0);
+                if(target != null){
+                    player.teleport(target.getPlayer());
+                    ChatUtility.sendMessage(player, ChatColor.GRAY + "You are spectating " + target.getSGName());
+                }else{
+                    player.sendMessage(Style.RED + "Error: Failed to teleport to player");
+                }
             }
         };
         items[8] = new ClickActionItem(net.hotsmc.core.utility.ItemUtility.createDye(Style.AQUA + "Back to Hub", 1, 14)) {

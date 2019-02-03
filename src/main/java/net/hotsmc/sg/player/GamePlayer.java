@@ -256,7 +256,7 @@ public class GamePlayer {
     }
 
     public String getSGName(){
-        return getInTeam() == null ? getHotsPlayer().getColorName() : getInTeam().getPrefix() + getHotsPlayer().getColorName();
+        return getInTeam() == null ? getHotsPlayer().getColorName() : getInTeam().getPrefix() + getName();
     }
 
     public HotsPlayer getHotsPlayer() {

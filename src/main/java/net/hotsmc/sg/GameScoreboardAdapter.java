@@ -51,10 +51,11 @@ public class GameScoreboardAdapter implements BoardAdapter {
 
         if(!gamePlayer.getPlayerData().isSidebarMCSG()) {
             toReturn.add(0, Style.SCOREBAORD_SEPARATOR);
-            toReturn.add(1,MAIN + "State: " + SUB + state.name());
-            toReturn.add(2,MAIN + "Time: " + SUB + TimeUtility.timeFormat(game.getTime()));
-            toReturn.add(3,MAIN + "Server: " + SUB + settings.getServerName() + Style.GRAY + " (" + settings.getServerRegion() + ")");
-            toReturn.add(4,MAIN + "Players: " + SUB + game.countAlive() + Style.GRAY + "/" + SUB + "24");
+            toReturn.add(1, MAIN + "You: " + gamePlayer.getSGName());
+            toReturn.add(2,MAIN + "State: " + SUB + state.name());
+            toReturn.add(3,MAIN + "Time: " + SUB + TimeUtility.timeFormat(game.getTime()));
+            toReturn.add(4,MAIN + "Server: " + SUB + settings.getServerName() + Style.GRAY + " (" + settings.getServerRegion() + ")");
+            toReturn.add(5,MAIN + "Players: " + SUB + game.countAlive() + Style.GRAY + "/" + SUB + "24");
             if (state == GameState.Lobby) {
                 if (game.isTimerFlag()) {
                     if(!game.getGameConfig().isCustomSG()) {
@@ -74,7 +75,7 @@ public class GameScoreboardAdapter implements BoardAdapter {
             toReturn.add(Style.SCOREBAORD_SEPARATOR);
         }else{
             toReturn.add("" + Style.GRAY + "» " + Style.WHITE + "You");
-            toReturn.add("" + Style.WHITE + player.getName());
+            toReturn.add(gamePlayer.getSGName());
             toReturn.add("");
             toReturn.add("" + Style.GRAY + "» " + ChatColor.WHITE + "Time");
             toReturn.add(Style.YELLOW + DateUtility.getDateAsJST());

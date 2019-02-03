@@ -48,11 +48,14 @@ public class TeamCommand implements CommandExecutor {
                 GamePlayer gamePlayer = HSG.getGameTask().getGamePlayer(player);
                 if (gamePlayer == null) return true;
                 TeamManager m = HSG.getInstance().getTeamManager();
-
                 if (args.length == 1) {
                     if (args[0].equalsIgnoreCase("create")) {
                         if (!gamePlayer.isInTeam()) {
-                            m.addTeam(m.createTeam(gamePlayer));
+                            if(m.canCreate()) {
+                                m.addTeam(m.createTeam(gamePlayer));
+                            }else{
+                                gamePlayer.sendMessage(Style.RED + "Error: Currently there are greater than or equal to 12 teams.");
+                            }
                         } else {
                             gamePlayer.sendMessage(Style.RED + "You have already been in team.");
                         }

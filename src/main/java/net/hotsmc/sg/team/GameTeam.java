@@ -15,33 +15,47 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
 public class GameTeam {
 
     private static final String TEAM_MESSAGE_PREFIX = Style.YELLOW + Style.BOLD + "Team" + Style.DARK_GRAY + " » ";
+    private static final Hashtable<Integer, String> prefixes = new Hashtable<>();
 
-    private int teamID;
-    private List<GamePlayer> players;
+    static {
+        prefixes.put(1, Style.AQUA);
+        prefixes.put(2, Style.RED);
+        prefixes.put(3, Style.YELLOW);
+        prefixes.put(4, Style.GREEN);
+        prefixes.put(5, Style.PINK);
+        prefixes.put(6, Style.GOLD);
+        prefixes.put(7, Style.BLUE);
+        prefixes.put(8, Style.DARK_GREEN);
+        prefixes.put(9, Style.DARK_AQUA);
+        prefixes.put(10, Style.DARK_PURPLE);
+        prefixes.put(11, Style.DARK_RED);
+        prefixes.put(12, Style.GRAY);
+    }
+
+    private final int teamID;
+    private final List<GamePlayer> players;
+    private final List<String> invitePlayers;
     private String leaderName;
-    private List<String> invitePlayers;
 
     public GameTeam(int teamID, GamePlayer leader){
         this.teamID = teamID;
         this.players = new LinkedList<>();
         this.invitePlayers = new LinkedList<>();
         this.leaderName = leader.getName();
-        NametagAPI.setPrefix(leader.getName(), getPrefix() + leader.getHotsPlayer().getPlayerRank().getPrefix());
+        NametagAPI.setPrefix(leader.getName(), getPrefix());
         players.add(leader);
         leader.sendMessage(TEAM_MESSAGE_PREFIX + Style.YELLOW + "You have created team #" + teamID);
     }
 
     public String getPrefix(){
-        return Style.WHITE + "[" + teamID + "] " + Style.GRAY;
+        return Style.WHITE + "[" + prefixes.get(teamID) + teamID + Style.WHITE + "] " + prefixes.get(teamID);
     }
 
     public GamePlayer getTeamPlayer(GamePlayer gamePlayer){
@@ -60,13 +74,11 @@ public class GameTeam {
     public void addPlayer(GamePlayer teamPlayer) {
         if (teamPlayer.isInTeam()) {
             teamPlayer.sendMessage(Style.RED + "You've already been in team");
-            return;
-        }
-        if (!invitePlayers.contains(teamPlayer.getName())) {
+        } else if (!invitePlayers.contains(teamPlayer.getName())) {
             teamPlayer.sendMessage(ChatColor.RED + "You were not invited by " + leaderName);
         } else {
             invitePlayers.remove(teamPlayer.getPlayer().getName());
-            NametagAPI.setPrefix(teamPlayer.getName(), getPrefix() + teamPlayer.getHotsPlayer().getPlayerRank().getPrefix());
+            NametagAPI.setPrefix(teamPlayer.getName(), getPrefix());
             players.add(teamPlayer);
             broadcast(teamPlayer.getHotsPlayer().getColorName() + Style.GRAY + " has joined to #" + teamID);
         }
@@ -81,9 +93,7 @@ public class GameTeam {
         players.remove(teamPlayer);
         if (players.size() <= 0) {
             HSG.getInstance().getTeamManager().removeTeam(this);
-            return;
-        }
-        if (isLeader(teamPlayer)) {
+        } else if (isLeader(teamPlayer)) {
             GamePlayer newLeader = players.get(0);
             setLeaderName(leaderName);
             broadcast(ChatColor.YELLOW + "Team leader has been changed to " + newLeader.getPlayer().getName());

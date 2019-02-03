@@ -516,6 +516,10 @@ public class PlayerListener implements Listener {
 
         if(deadGP == null)return;
 
+        GamePlayerData deadData = HSG.getGameTask().getGamePlayerData(dead.getName());
+        deadData.setAlive(false);
+        deadData.applyPlaceRank();
+
         deadGP.setRespawnLocation(dead.getLocation());
 
         GameTeam team = gameTask.getGamePlayer(dead).getInTeam();
@@ -567,11 +571,8 @@ public class PlayerListener implements Listener {
                 dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
 
-            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(dead.getName());
-            gamePlayerData.setAlive(false);
-            gamePlayerData.applyPlaceRank();
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
-            dead.sendMessage(Style.AQUA + "You have been placed #" + gamePlayerData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
+            dead.sendMessage(Style.AQUA + "You have been placed #" + deadData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
             return;
         }
@@ -607,11 +608,8 @@ public class PlayerListener implements Listener {
                 dead.getWorld().playSound(dead.getLocation(), Sound.CHEST_CLOSE, 0.5F, 1.0F);
             }
 
-            GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(dead.getName());
-            gamePlayerData.setAlive(false);
-            gamePlayerData.applyPlaceRank();
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
-            dead.sendMessage(Style.AQUA + "You have been placed #" + gamePlayerData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
+            dead.sendMessage(Style.AQUA + "You have been placed #" + deadData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
         } else {
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
@@ -621,8 +619,8 @@ public class PlayerListener implements Listener {
                 killerGP.sendMessage(Style.RED + Style.BOLD + "Friendly Kill" + Style.DARK_GRAY + " » " + Style.YELLOW +  "You've killed your team mate!");
             }else{
                 GamePlayerData gamePlayerData = HSG.getGameTask().getGamePlayerData(killer.getName());
-                killer.sendMessage(Style.AQUA + "You have " + gamePlayerData.getKills() + " kills.");
                 gamePlayerData.addKill();
+                killer.sendMessage(Style.AQUA + "You have " + gamePlayerData.getKills() + " kills.");
                 HSG.getGameTask().getGamePlayerData().sort((o1, o2) -> o1.getKills() > o2.getKills() ? -1 : 1);
             }
 
@@ -630,9 +628,6 @@ public class PlayerListener implements Listener {
             Location location = dead.getLocation();
             location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             deadGP.setWatching(true);
-            GamePlayerData deadData = HSG.getGameTask().getGamePlayerData(killer.getName());
-            deadData.setAlive(false);
-            deadData.applyPlaceRank();
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
             dead.sendMessage(Style.AQUA + "You have been placed #" + deadData.getPlaceRank() + "/#" + HSG.getGameTask().getGamePlayerData().size());
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
