@@ -1,9 +1,9 @@
-name: HotsSG
-main: net.hotsmc.sg.HSG
+name: RouteSG
+main: net.routemc.sg.RouteSG
 version: 2.0
-softdepend: [HotsCore]
+depend: [RouteCore, RequiresAPI]
 commands:
-  hsg:
+  rsg:
   spec:
   stats:
   sponsor:
@@ -19,6 +19,7 @@ commands:
   frkbreload:
   roster:
   team:
+    aliases: [t]
   observer:
   kc:
   tc:
