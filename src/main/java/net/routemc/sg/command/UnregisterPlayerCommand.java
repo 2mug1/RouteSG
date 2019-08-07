@@ -16,10 +16,6 @@ public class UnregisterPlayerCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if(RouteAPI.getRankOfPlayer(player).getWeight() < 1){
-                player.sendMessage(Style.RED + "You don't have permission.");
-                return true;
-            }
             final GameTask game = RouteSG.getGameTask();
             if (game.getGameConfig().isCustomSG()) {
                 if (!player.getUniqueId().equals(game.getHost())) {

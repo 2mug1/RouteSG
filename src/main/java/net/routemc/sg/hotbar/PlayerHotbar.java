@@ -167,7 +167,7 @@ public enum PlayerHotbar {
                 new SettingsMenu().openMenu(player, 9);
             }
         };
-        items[2] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {
+        items[1] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Statistics", Material.EMERALD, false)) {
             @Override
             public void clickAction(Player player) {
                 GamePlayer gamePlayer = RouteSG.getGameTask().getGamePlayer(player);
@@ -175,13 +175,13 @@ public enum PlayerHotbar {
                 new StatisticsMenu().openMenu(player, 45);
             }
         };
-        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Manager", Material.COMPASS, false)) {
+        items[3] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Spectate Manager", Material.COMPASS, false)) {
             @Override
             public void clickAction(Player player) {
                 new SpectateManagerMenu().openMenu(player, 27);
             }
         };
-        items[6] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Random Teleport", Material.EYE_OF_ENDER, false)) {
+        items[4] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "Random Teleport", Material.EYE_OF_ENDER, false)) {
             @Override
             public void clickAction(Player player) {
                 List<GamePlayer> players = RouteSG.getGameTask().getAlivePlayers();
@@ -197,6 +197,12 @@ public enum PlayerHotbar {
                 }else{
                     player.sendMessage(Style.RED + "Error: Failed to teleport to player");
                 }
+            }
+        };
+        items[6] = new ClickActionItem(ItemUtility.createItemStack(Style.AQUA + "View Inventory", Material.STICK, false)) {
+            @Override
+            public void clickAction(Player player) {
+
             }
         };
         items[8] = new ClickActionItem(ItemUtility.createDye(Style.AQUA + "Back to Lobby", 1, 14)) {

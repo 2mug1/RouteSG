@@ -20,10 +20,6 @@ public class HostCommand implements CommandExecutor {
                 player.sendMessage(Style.RED + "This server isn't custom sg.");
                 return true;
             }
-            if(RouteAPI.getRankOfPlayer(player).getWeight() < 1){
-                player.sendMessage(Style.RED + "You don't have permission.");
-                return true;
-            }
             if(game.getGameConfig().isCustomSG()){
                 if(game.getHost() == player.getUniqueId()){
                     player.sendMessage(Style.RED + "You have already been hosting.");

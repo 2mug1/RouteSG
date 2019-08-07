@@ -61,7 +61,7 @@ public class PlayerData {
         document.put("POINT", 1000);
         document.put("CHESTS", 0);
         document.put("TOP3", 0);
-        document.put("SIDEBAR_MCSG", false);
+        document.put("SIDEBAR_MCSG", true);
         document.put("LOBBY_PVP", true);
 
         setFirstPlayed(timestamp);

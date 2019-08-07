@@ -3,6 +3,9 @@ package net.routemc.sg.menu;
 import me.trollcoding.requires.gui.Button;
 import me.trollcoding.requires.gui.Menu;
 import me.trollcoding.requires.utils.objects.Style;
+import net.routemc.core.RouteAPI;
+import net.routemc.core.RouteCore;
+import net.routemc.core.profile.Profile;
 import net.routemc.sg.RouteSG;
 import net.routemc.sg.player.GamePlayer;
 import net.routemc.sg.utility.ChatUtility;
@@ -43,7 +46,8 @@ public class SpectateMenu extends Menu {
                 buttons.put(i, new Button() {
                     @Override
                     public ItemStack getButtonItem(Player player) {
-                        return ItemUtility.createPlayerSkull(gamePlayer.getPlayer().getName(), gamePlayer.getSGName(), Style.WHITE + RouteSG.getGameTask().getGamePlayerData(gamePlayer.getName()).getKills() + Style.GRAY + " kills");
+                        Profile profile = RouteAPI.getProfileByUUID(player.getUniqueId());
+                        return ItemUtility.createPlayerSkull(gamePlayer.getPlayer().getName(), (profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + gamePlayer.getSGName(), Style.WHITE + RouteSG.getGameTask().getGamePlayerData(gamePlayer.getName()).getKills() + Style.GRAY + " kills");
                     }
                     @Override
                     public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {

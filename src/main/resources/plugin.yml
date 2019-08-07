@@ -6,7 +6,7 @@ commands:
   rsg:
   spec:
   stats:
-  sponsor:
+  bb:
   list:
     aliases: [l]
   vote:

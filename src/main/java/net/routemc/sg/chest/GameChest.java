@@ -1,4 +1,4 @@
-package net.routemc.sg.chest;
+  package net.routemc.sg.chest;
 
 import lombok.Getter;
 import lombok.Setter;

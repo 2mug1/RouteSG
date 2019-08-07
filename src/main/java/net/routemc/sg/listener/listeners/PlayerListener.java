@@ -1,5 +1,6 @@
 package net.routemc.sg.listener.listeners;
 
+import ca.wacos.nametagedit.NametagAPI;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.trollcoding.requires.hotbar.ClickActionItem;
@@ -7,6 +8,7 @@ import me.trollcoding.requires.utils.objects.Style;
 import net.routemc.core.RouteAPI;
 import net.routemc.core.profile.Profile;
 import net.routemc.core.rank.Rank;
+import net.routemc.core.util.menu.ViewPlayerMenu;
 import net.routemc.sg.database.PlayerData;
 import net.routemc.sg.RouteSG;
 import net.routemc.sg.game.GameTask;
@@ -31,11 +33,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -86,7 +90,7 @@ public class PlayerListener implements Listener {
                 Rank playerRank = profile.getActiveRank();
 
                 if (state == GameState.Lobby && Bukkit.getServer().getOnlinePlayers().size() < 1 && game.getHost() == null) {
-                    if (playerRank.getWeight() < 1 && profile.getEconomy().getCoins() < 100) {
+                    if (playerRank.getWeight() < 1 && profile.getEconomy().getCoins() < 10) {
                         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Style.AQUA + "Not enough coins to make Custom SG.");
                     }
                     return;
@@ -138,11 +142,15 @@ public class PlayerListener implements Listener {
         GameTask gameTask = RouteSG.getGameTask();
         GameConfig gameConfig = gameTask.getGameConfig();
         GameState state = gameTask.getState();
+
+        Profile profile = RouteAPI.getProfileByUUID(player.getUniqueId());
+        NametagAPI.setPrefix(player.getName(), (profile.isInClan() ? profile.getClan().getStyleTag() : "") + Style.RESET + profile.getActiveRank().getColor());
+
         if (state == GameState.Lobby) {
             if (gameConfig.isCustomSG()) {
                 if (Bukkit.getServer().getOnlinePlayers().size() <= 1) {
                     if (RouteAPI.getRankOfPlayer(player).getWeight() < 1) {
-                        RouteAPI.getEconomyOfPlayer(player).removeCoin(100);
+                        RouteAPI.getEconomyOfPlayer(player).removeCoin(10);
                     }
                     player.sendMessage(Style.HORIZONTAL_SEPARATOR);
                     player.sendMessage(Style.YELLOW + Style.BOLD + " Host Help");
@@ -256,7 +264,7 @@ public class PlayerListener implements Listener {
                             player1.playSound(player1.getLocation(), Sound.WITHER_SPAWN, 0.7F, 1);
                         }
                     }
-                }else{
+                } else {
                     team.removePlayer(gamePlayer);
                 }
             }
@@ -312,7 +320,7 @@ public class PlayerListener implements Listener {
             gameTask.onEndGame();
         }
 
-        if(gamePlayer.getInTeam() != null){
+        if (gamePlayer.getInTeam() != null) {
             gamePlayer.getInTeam().removePlayer(gamePlayer);
         }
 
@@ -326,7 +334,7 @@ public class PlayerListener implements Listener {
         if (gamePlayer == null) return;
         ItemStack itemStack = player.getItemInHand();
         if (itemStack == null || itemStack.getType() == Material.AIR) return;
-        if(RouteSG.getGameTask().getState() == GameState.Lobby) {
+        if (RouteSG.getGameTask().getState() == GameState.Lobby) {
             if (itemStack.getType() == Material.ANVIL || itemStack.getType() == Material.CHEST || itemStack.getType() == Material.HOPPER || itemStack.getType() == Material.WORKBENCH) {
                 event.setCancelled(true);
             }
@@ -382,7 +390,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player) {
-            if(event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION){
+            if (event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
                 event.setCancelled(true);
                 return;
             }
@@ -463,20 +471,18 @@ public class PlayerListener implements Listener {
             Player damaged = (Player) event.getEntity();
             GamePlayer damagerGP = gameTask.getGamePlayer(damager);
             GamePlayer damagedGP = gameTask.getGamePlayer(damaged);
-            if(damagerGP.isWatching()){
+            if (damagerGP.isWatching()) {
                 event.setCancelled(true);
                 return;
             }
             if (state == GameState.PreGame || state == GameState.PreDeathmatch) {
                 event.setCancelled(true);
-            }
-            else if (state == GameState.LiveGame) {
+            } else if (state == GameState.LiveGame) {
                 if (gameTask.getTime() > gameTask.getGracePeriodTimeSec()) {
                     event.setCancelled(true);
                     damager.sendMessage(Style.RED + "PvP will be enabled in " + TimeUtility.timeFormat(gameTask.getGracePeriodTimeSec()));
                 }
-            }
-            else if (state == GameState.Lobby) {
+            } else if (state == GameState.Lobby) {
                 if (!damagedGP.getPlayerData().isLobbyPvP()) {
                     event.setCancelled(true);
                     return;
@@ -486,8 +492,7 @@ public class PlayerListener implements Listener {
                     return;
                 }
                 event.setDamage(0D);
-            }
-            else if (damagedGP.isWatching()) {
+            } else if (damagedGP.isWatching()) {
                 event.setCancelled(true);
             }
         }
@@ -495,20 +500,19 @@ public class PlayerListener implements Listener {
         else if (event.getDamager() instanceof Player && !(event.getEntity() instanceof Player)) {
             Player damager = (Player) event.getDamager();
             GamePlayer damagerGP = gameTask.getGamePlayer(damager);
-            if(damagerGP.isWatching()){
+            if (damagerGP.isWatching()) {
                 event.setCancelled(true);
             }
-        }
-        else if (event.getDamager() instanceof Arrow) {
-             if(((Arrow)event.getDamager()).getShooter() instanceof Player){
-                 if (state == GameState.LiveGame) {
-                     if (gameTask.getTime() > gameTask.getGracePeriodTimeSec()) {
-                         event.setCancelled(true);
-                         Player damager = (Player)((Arrow)event.getDamager()).getShooter();
-                         damager.sendMessage(Style.RED + "PvP will be enabled in " + TimeUtility.timeFormat(gameTask.getGracePeriodTimeSec()));
-                     }
-                 }
-             }
+        } else if (event.getDamager() instanceof Arrow) {
+            if (((Arrow) event.getDamager()).getShooter() instanceof Player) {
+                if (state == GameState.LiveGame) {
+                    if (gameTask.getTime() > gameTask.getGracePeriodTimeSec()) {
+                        event.setCancelled(true);
+                        Player damager = (Player) ((Arrow) event.getDamager()).getShooter();
+                        damager.sendMessage(Style.RED + "PvP will be enabled in " + TimeUtility.timeFormat(gameTask.getGracePeriodTimeSec()));
+                    }
+                }
+            }
         }
     }
 
@@ -552,13 +556,15 @@ public class PlayerListener implements Listener {
         GameTask gameTask = RouteSG.getGameTask();
         GamePlayer deadGP = gameTask.getGamePlayer(dead);
 
-        if(deadGP == null)return;
+        if (deadGP == null) return;
 
         GamePlayerData deadData = RouteSG.getGameTask().getGamePlayerData(dead.getName());
         deadData.setAlive(false);
         deadData.applyPlaceRank();
 
         deadGP.setRespawnLocation(dead.getLocation());
+
+        Profile profile = RouteAPI.getProfileByUUID(dead.getUniqueId());
 
         GameTeam team = gameTask.getGamePlayer(dead).getInTeam();
         if (team != null) {
@@ -569,7 +575,7 @@ public class PlayerListener implements Listener {
                 ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
                 ChatUtility.normalBroadcast(Style.YELLOW + "Team #" + team.getTeamID() + Style.WHITE + " has been eliminated!");
                 ChatUtility.normalBroadcast(Style.HORIZONTAL_SEPARATOR);
-                for(Player player1 : Bukkit.getServer().getOnlinePlayers()){
+                for (Player player1 : Bukkit.getServer().getOnlinePlayers()) {
                     player1.playSound(player1.getLocation(), Sound.WITHER_SPAWN, 0.7F, 1);
                 }
             }
@@ -582,11 +588,11 @@ public class PlayerListener implements Listener {
             location.getWorld().strikeLightningEffect(location.add(0, 3, 0));
             deadGP.setWatching(true);
             e.setDroppedExp(0);
-            if(!gameTask.getGameConfig().isCustomSG()) {
+            if (!gameTask.getGameConfig().isCustomSG()) {
                 ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
                 deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
             }
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + (profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + deadGP.getSGName());
 
             deadGP.respawn();
 
@@ -623,14 +629,14 @@ public class PlayerListener implements Listener {
             e.setDroppedExp(0);
             ChatUtility.sendMessage(dead, ChatColor.DARK_AQUA + "You've lost " + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + deadGP.getPlayerData().calculatedPoint() + ChatColor.DARK_GRAY + "] " + ChatColor.DARK_AQUA + " points for dying");
             deadGP.getPlayerData().withdrawPoint(deadGP.getPlayerData().calculatedPoint());
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + (profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + deadGP.getSGName());
 
             deadGP.respawn();
 
             if (gameTask.countAlive() <= 1) {
                 gameTask.onEndGame();
             }
-            if(!gameTask.getGameConfig().isCustomSG()) {
+            if (!gameTask.getGameConfig().isCustomSG()) {
                 if (gameTask.countAlive() <= 3) {
                     for (GamePlayer gamePlayer : gameTask.getGamePlayers()) {
                         if (!gamePlayer.isWatching()) {
@@ -653,9 +659,9 @@ public class PlayerListener implements Listener {
             GamePlayer killerGP = gameTask.getGamePlayer(killer);
 
             //Friendly Kill
-            if(killerGP.isInTeam() && deadGP.isInTeam() && deadGP.getInTeam().getTeamID() == killerGP.getInTeam().getTeamID()) {
-                killerGP.sendMessage(Style.RED + Style.BOLD + "Friendly Kill" + Style.DARK_GRAY + " » " + Style.YELLOW +  "You've killed your team mate!");
-            }else{
+            if (killerGP.isInTeam() && deadGP.isInTeam() && deadGP.getInTeam().getTeamID() == killerGP.getInTeam().getTeamID()) {
+                killerGP.sendMessage(Style.RED + Style.BOLD + "Friendly Kill" + Style.DARK_GRAY + " » " + Style.YELLOW + "You've killed your team mate!");
+            } else {
                 GamePlayerData gamePlayerData = RouteSG.getGameTask().getGamePlayerData(killer.getName());
                 gamePlayerData.addKill();
                 killer.sendMessage(Style.AQUA + "You have " + gamePlayerData.getKills() + " kills.");
@@ -672,7 +678,7 @@ public class PlayerListener implements Listener {
             dead.sendMessage(Style.AQUA + "You have been placed #" + deadData.getPlaceRank() + "/#" + RouteSG.getGameTask().getGamePlayerData().size());
             dead.sendMessage(Style.HORIZONTAL_SEPARATOR);
 
-            if(!gameTask.getGameConfig().isCustomSG()) {
+            if (!gameTask.getGameConfig().isCustomSG()) {
                 killerGP.getPlayerData().updateKill(1);
 
                 //殺したプレイヤーに通知
@@ -688,7 +694,7 @@ public class PlayerListener implements Listener {
             }
             deadGP.setRespawnLocation(dead.getLocation());
             e.setDroppedExp(0);
-            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + deadGP.getSGName());
+            e.setDeathMessage(ChatColor.GOLD + "A cannon be heard in the distance in memorial for " + (profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + deadGP.getSGName());
 
             deadGP.respawn();
 
@@ -724,9 +730,9 @@ public class PlayerListener implements Listener {
         GamePlayer gamePlayer = gameTask.getGamePlayer(event.getPlayer());
         if (gamePlayer == null) return;
         Block block = event.getBlock();
-        if(block.getType() == Material.BOAT){
+        if (block.getType() == Material.BOAT) {
             Block substract = block.getLocation().subtract(0, 1, 0).getBlock();
-            if(substract.getType() != Material.WATER ||substract.getType() != Material.WATER_LILY){
+            if (substract.getType() != Material.WATER || substract.getType() != Material.WATER_LILY) {
                 event.setCancelled(true);
                 return;
             }
@@ -772,8 +778,7 @@ public class PlayerListener implements Listener {
     public void onCraft(CraftItemEvent event) {
         if (event.getRecipe().getResult().getType() == Material.FLINT_AND_STEEL) {
             event.setCurrentItem(ItemUtility.createFlintAndSteel());
-        }
-        else if(event.getRecipe().getResult().getType() == Material.BUCKET){
+        } else if (event.getRecipe().getResult().getType() == Material.BUCKET) {
             event.setCancelled(true);
         }
     }
@@ -864,13 +869,14 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
+        Profile profile = RouteAPI.getProfileByPlayer(event.getPlayer());
         if (RouteSG.getGameTask().getGameConfig().isCustomSG()) {
             if (RouteSG.getGameTask().getHost() == player.getUniqueId()) {
-                event.setFormat(Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + Style.DARK_GRAY + "[" + Style.LIGHT_PURPLE + Style.BOLD + "Host" + Style.DARK_GRAY + "] " + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', event.getMessage()));
+                event.setFormat((profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + Style.DARK_GRAY + "[" + Style.LIGHT_PURPLE + Style.BOLD + "Host" + Style.DARK_GRAY + "] " + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', event.getMessage()));
                 return;
             }
             if (RouteSG.getInstance().getObserverPlayers().contains(player.getName().toLowerCase())) {
-                event.setFormat(Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + Style.DARK_GRAY + "[" + Style.LIGHT_PURPLE + Style.BOLD + "Observer" + Style.DARK_GRAY + "] " + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', event.getMessage()));
+                event.setFormat((profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + Style.DARK_GRAY + "[" + Style.LIGHT_PURPLE + Style.BOLD + "Observer" + Style.DARK_GRAY + "] " + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', event.getMessage()));
                 return;
             }
         }
@@ -879,22 +885,78 @@ public class PlayerListener implements Listener {
             for (GamePlayer gamePlayer : RouteSG.getGameTask().getGamePlayers()) {
                 if (RouteSG.getGameTask().getState() != GameState.EndGame) {
                     if (gamePlayer.isWatching()) {
-                        gamePlayer.getPlayer().sendMessage(Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + ChatColor.DARK_RED + "SPEC" + ChatColor.DARK_GRAY + "|" + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + event.getMessage());
+                        gamePlayer.getPlayer().sendMessage((profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + ChatColor.DARK_RED + "SPEC" + ChatColor.DARK_GRAY + "|" + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + event.getMessage());
                     }
                 } else {
-                    gamePlayer.getPlayer().sendMessage(Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + ChatColor.DARK_RED + "SPEC" + ChatColor.DARK_GRAY + "|" + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + event.getMessage());
+                    gamePlayer.getPlayer().sendMessage((profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + ChatColor.DARK_RED + "SPEC" + ChatColor.DARK_GRAY + "|" + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.GRAY + ": " + ChatColor.RESET + event.getMessage());
                 }
             }
         } else {
-            event.setFormat(Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " +  RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.DARK_GRAY + ": " + ChatColor.WHITE + event.getMessage());
+            event.setFormat((profile.isInClan() ? profile.getClan().getStyleTag() + " " : "") + Style.WHITE + "(" + RouteAPI.getExperienceOfPlayer(player).getLevel() + Style.WHITE + ") " + RouteSG.getGameTask().getGamePlayer(player).getSGName() + ChatColor.DARK_GRAY + ": " + ChatColor.WHITE + event.getMessage());
         }
     }
 
     @EventHandler
-    public void onCommand(PlayerCommandPreprocessEvent event){
-        if(RouteSG.getGameTask().getState() == GameState.Lobby || RouteSG.getGameTask().getState() == GameState.EndGame){
-            if(event.getMessage().contains("kill")){
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        if (RouteSG.getGameTask().getState() == GameState.Lobby || RouteSG.getGameTask().getState() == GameState.EndGame) {
+            if (event.getMessage().contains("kill")) {
                 event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onClickInv(InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player) {
+            Player player = (Player) event.getWhoClicked();
+            GamePlayer gamePlayer = RouteSG.getGameTask().getGamePlayer(player);
+            if (gamePlayer == null) return;
+            if (player.getGameMode() != GameMode.CREATIVE) {
+                if (RouteSG.getGameTask().getState() == GameState.Lobby || gamePlayer.isWatching()) {
+                    Inventory inv = event.getClickedInventory();
+                    Inventory playerInv = player.getInventory();
+                    if (inv == null || playerInv == null) return;
+                    if (inv.equals(playerInv)) {
+                        event.setCancelled(true);
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        final Player player = event.getPlayer();
+        final GamePlayer gamePlayer = RouteSG.getGameTask().getGamePlayer(player);
+
+        if (gamePlayer.isWatching() && event.getRightClicked() instanceof Player && player.getItemInHand() != null) {
+            final Player target = (Player) event.getRightClicked();
+
+            if (player.getItemInHand().getType() == Material.STICK &&
+                    player.getItemInHand().hasItemMeta() &&
+                    player.getItemInHand().getItemMeta().hasDisplayName() &&
+                    player.getItemInHand().getItemMeta().getDisplayName().contains("View Inventory")) {
+                new ViewPlayerMenu(target).openMenu(player);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        GamePlayer gamePlayer = RouteSG.getGameTask().getGamePlayer(player);
+        if (gamePlayer != null) {
+            if (!gamePlayer.isWatching()) {
+                if (!gamePlayer.isAllowMovement()) {
+                    Location from = event.getFrom();
+                    double xfrom = event.getFrom().getX();
+                    double zfrom = event.getFrom().getZ();
+                    double xto = event.getTo().getX();
+                    double zto = event.getTo().getZ();
+                    if (!(xfrom == xto && zfrom == zto)) {
+                        player.teleport(from);
+                    }
+                }
             }
         }
     }

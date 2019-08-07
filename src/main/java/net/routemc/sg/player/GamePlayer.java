@@ -11,7 +11,6 @@ import net.routemc.sg.chest.GameChest;
 import net.routemc.sg.database.PlayerData;
 import net.routemc.sg.hotbar.PlayerHotbar;
 import net.routemc.sg.menu.SponsorMenu;
-import net.routemc.sg.task.PlayerFreezingTask;
 import net.routemc.sg.team.GameTeam;
 import net.routemc.sg.utility.ChatUtility;
 import net.routemc.sg.utility.ItemUtility;
@@ -20,6 +19,8 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,7 +36,7 @@ public class GamePlayer {
     private List<ItemStack> sponsorItems;
     private SponsorMenu sponsorMenu;
     private Location respawnLocation;
-    private PlayerFreezingTask playerFreezingTask;
+    private boolean allowMovement = true;
     private GameChest openingChest;
     private PlayerHotbar hotbar;
     private boolean alive = true;
@@ -54,6 +55,7 @@ public class GamePlayer {
         }
         player.setAllowFlight(true);
         player.setFlying(true);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 0));
     }
 
     public void disableWatching() {
@@ -63,6 +65,7 @@ public class GamePlayer {
         }
         player.setAllowFlight(false);
         player.setFlying(false);
+        player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
     }
 
     public void respawn() {
@@ -83,20 +86,6 @@ public class GamePlayer {
         player.setFoodLevel(20);
         player.setHealth(20D);
         PlayerUtility.clearEffects(player);
-    }
-
-    public void startFreezingTask(Location location){
-        if(playerFreezingTask != null){
-            playerFreezingTask.cancel();
-        }
-        playerFreezingTask = new PlayerFreezingTask(player, location);
-        playerFreezingTask.runTaskTimer(RouteSG.getInstance(), 0, 3);
-    }
-
-    public void stopFreezingTask(){
-        if(playerFreezingTask != null){
-            playerFreezingTask.cancel();
-        }
     }
 
     public void addItem(ItemStack itemStack){

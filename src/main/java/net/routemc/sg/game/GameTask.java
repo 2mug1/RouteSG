@@ -175,7 +175,7 @@ public class GameTask {
      */
     public GamePlayer getGamePlayer(Player player) {
         for (GamePlayer gamePlayer : gamePlayers) {
-            if (gamePlayer.getPlayer().getName().equals(player.getName())) {
+            if (gamePlayer.getPlayer().getUniqueId().equals(player.getUniqueId())) {
                 return gamePlayer;
             }
         }
@@ -230,7 +230,7 @@ public class GameTask {
             GamePlayer gamePlayer = alive.get(i);
             Location location = getCurrentMap().getDeathmatchSpawns().get(i);
             gamePlayer.teleport(location);
-            gamePlayer.startFreezingTask(location);
+            gamePlayer.setAllowMovement(false);
         }
     }
 
@@ -244,7 +244,7 @@ public class GameTask {
             gamePlayer.teleport(location);
             gamePlayer.getPlayer().getInventory().clear();
             gamePlayer.getPlayer().updateInventory();
-            gamePlayer.startFreezingTask(location);
+            gamePlayer.setAllowMovement(false);
         }
     }
 
@@ -279,7 +279,7 @@ public class GameTask {
             gamePlayer.teleport(location);
             gamePlayer.getPlayer().getInventory().clear();
             gamePlayer.getPlayer().updateInventory();
-            gamePlayer.startFreezingTask(location);
+            gamePlayer.setAllowMovement(false);
         }
     }
 
@@ -344,7 +344,7 @@ public class GameTask {
      */
     private void onLiveGame() {
         for(GamePlayer gamePlayer : gamePlayers){
-            gamePlayer.stopFreezingTask();
+            gamePlayer.setAllowMovement(true);
             if(!gameConfig.isCustomSG()) {
                 gamePlayer.getPlayerData().updatePlayed(1);
             }
@@ -377,7 +377,7 @@ public class GameTask {
      */
     private void onDeathMatch() {
         for(GamePlayer gamePlayer : gamePlayers){
-            gamePlayer.stopFreezingTask();
+            gamePlayer.setAllowMovement(true);
         }
         ChatUtility.broadcast(ChatColor.RED + "Fight to the death!");
         ChatUtility.broadcast("" + ChatColor.RED + ChatColor.DARK_GRAY + "[" + ChatColor.YELLOW + "3" + ChatColor.DARK_GRAY + "]" + ChatColor.RED + " minutes until the deathmatch ends!");

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.trollcoding.requires.utils.objects.Style;
 import net.routemc.core.RouteAPI;
+import net.routemc.core.profile.Profile;
 import net.routemc.sg.RouteSG;
 import net.routemc.sg.player.GamePlayer;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -83,7 +84,8 @@ public class GameTeam {
     }
 
     public void removePlayer(GamePlayer teamPlayer) {
-        NametagAPI.setPrefix(teamPlayer.getName(), RouteAPI.getRankOfPlayer(teamPlayer.getPlayer()).getColor());
+        Profile profile = RouteAPI.getProfileByUUID(teamPlayer.getPlayer().getUniqueId());
+        NametagAPI.setPrefix(teamPlayer.getName(), (profile.isInClan() ? profile.getClan().getStyleTag() : "") + Style.RESET + profile.getActiveRank().getColor());
         broadcast(teamPlayer.getName() + Style.GRAY + " has left");
         players.remove(teamPlayer);
         if (players.size() <= 0) {
